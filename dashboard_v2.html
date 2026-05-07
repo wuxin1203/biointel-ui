@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BioIntelOS — Multi-omics Data Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',
+    'Microsoft YaHei',Roboto,Helvetica,Arial,sans-serif;
+  background:#fff;color:#334155;line-height:1.5;
+}
+.container{max-width:1440px;margin:0 auto;padding:36px 40px}
+
+/* ── brand header ── */
+.brand{margin-bottom:28px}
+.brand h1{font-size:26px;font-weight:700;color:#16a34a;letter-spacing:-0.5px}
+.brand h1 span{color:#334155}
+.brand p{font-size:13px;color:#94a3b8;margin-top:2px}
+
+/* ── stat cards row ── */
+.cards-row{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px;
+}
+.stat-card{
+  background:#fff;border:1px solid #e2e8f0;border-radius:14px;
+  padding:18px 20px;display:flex;align-items:center;gap:12px;
+  transition:box-shadow .2s;
+}
+.stat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06)}
+.sc-left{flex:0 0 60%;display:flex;flex-direction:column;gap:2px}
+.sc-icon{margin-bottom:4px}
+.sc-value{font-size:28px;font-weight:700;line-height:1.1}
+.sc-title{font-size:13px;font-weight:600;color:#475569}
+.sc-sub{font-size:11px;color:#94a3b8}
+.sc-right{flex:1;display:flex;align-items:flex-end}
+.sc-right svg{width:100%;height:36px}
+
+/* ── chart grid ── */
+.chart-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+}
+.chart-card{
+  background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;
+  transition:box-shadow .2s;
+}
+.chart-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06)}
+.chart-card h3{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:12px}
+.full-width{grid-column:1/-1}
+
+/* ── list card ── */
+.list-card{overflow:hidden}
+.list-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.list-col-title{font-size:13px;font-weight:700;color:#475569;margin-bottom:10px;
+  padding-bottom:6px;border-bottom:1px solid #f1f5f9}
+.list-item{display:flex;align-items:center;gap:6px;padding:5px 0;font-size:12px;flex-wrap:wrap}
+.li-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0}
+.li-rank{font-weight:700;color:#22c55e;min-width:24px}
+.li-name{color:#475569;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-tag{background:#f0fdf4;color:#16a34a;font-size:10px;padding:1px 7px;border-radius:8px;
+  font-weight:600;white-space:nowrap}
+.li-cite{font-size:11px;color:#94a3b8;white-space:nowrap}
+
+/* ── tissue icon grid ── */
+.tissue-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px 12px;padding:8px 0}
+.tissue-cell{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.tissue-icon-wrap{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.tissue-name{font-size:12px;color:#475569;font-weight:500;line-height:1.2}
+.tissue-pct{font-size:11px;color:#64748b}
+
+/* ── circle packing ── */
+#circle-packing{display:block;margin:0 auto}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="brand">
+  <h1>BioIntel<span>OS</span></h1>
+  <p>Multi-omics Data Portal · 多组学数据门户</p>
+</div>
+
+<div class="cards-row">
+<div class="stat-card">
+  <div class="sc-left">
+    <div class="sc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+    <div class="sc-value" style="color:#22c55e">100</div>
+    <div class="sc-title">数据集总数</div>
+    <div class="sc-sub">持续增长中</div>
+  </div>
+  <div class="sc-right">
+    <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+      <path d="M0.0,32.0 L9.1,23.8 L18.2,22.6 L27.3,25.0 L36.4,21.0 L45.5,19.4 L54.5,15.7 L63.6,12.6 L72.7,16.6 L81.8,15.2 L90.9,6.3 L100.0,7.8 L100,36 L0,36 Z" fill="rgba(34,197,94,0.10)" />
+      <path d="M0.0,32.0 L9.1,23.8 L18.2,22.6 L27.3,25.0 L36.4,21.0 L45.5,19.4 L54.5,15.7 L63.6,12.6 L72.7,16.6 L81.8,15.2 L90.9,6.3 L100.0,7.8" fill="none" stroke="#22c55e" stroke-width="2"/>
+    </svg>
+  </div>
+</div>
+<div class="stat-card">
+  <div class="sc-left">
+    <div class="sc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"><path d="M9 2v6l-5 10a2 2 0 002 2h12a2 2 0 002-2L15 8V2"/><path d="M9 2h6"/><path d="M5 16h14"/></svg></div>
+    <div class="sc-value" style="color:#22c55e">100</div>
+    <div class="sc-title">样本总数</div>
+    <div class="sc-sub">来自多个研究</div>
+  </div>
+  <div class="sc-right">
+    <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+      <path d="M0.0,24.9 L9.1,23.0 L18.2,28.7 L27.3,26.5 L36.4,18.0 L45.5,16.9 L54.5,15.6 L63.6,16.7 L72.7,12.2 L81.8,10.2 L90.9,8.5 L100.0,10.2 L100,36 L0,36 Z" fill="rgba(34,197,94,0.10)" />
+      <path d="M0.0,24.9 L9.1,23.0 L18.2,28.7 L27.3,26.5 L36.4,18.0 L45.5,16.9 L54.5,15.6 L63.6,16.7 L72.7,12.2 L81.8,10.2 L90.9,8.5 L100.0,10.2" fill="none" stroke="#22c55e" stroke-width="2"/>
+    </svg>
+  </div>
+</div>
+<div class="stat-card">
+  <div class="sc-left">
+    <div class="sc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="21"/><line x1="3" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="21" y2="12"/></svg></div>
+    <div class="sc-value" style="color:#22c55e">254,395</div>
+    <div class="sc-title">细胞总数</div>
+    <div class="sc-sub">单细胞数据</div>
+  </div>
+  <div class="sc-right">
+    <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+      <path d="M0.0,31.1 L9.1,26.5 L18.2,26.0 L27.3,22.0 L36.4,19.9 L45.5,22.7 L54.5,21.2 L63.6,12.1 L72.7,15.2 L81.8,13.4 L90.9,4.9 L100.0,7.5 L100,36 L0,36 Z" fill="rgba(34,197,94,0.10)" />
+      <path d="M0.0,31.1 L9.1,26.5 L18.2,26.0 L27.3,22.0 L36.4,19.9 L45.5,22.7 L54.5,21.2 L63.6,12.1 L72.7,15.2 L81.8,13.4 L90.9,4.9 L100.0,7.5" fill="none" stroke="#22c55e" stroke-width="2"/>
+    </svg>
+  </div>
+</div>
+<div class="stat-card">
+  <div class="sc-left">
+    <div class="sc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="4" r="2"/><circle cx="4.5" cy="8.5" r="2"/><circle cx="17.5" cy="8.5" r="2"/><circle cx="7" cy="13" r="2"/><circle cx="15" cy="13" r="2"/><path d="M12 17c-2 2-5 3-5 5 0 1 1 2 5 2s5-1 5-2c0-2-3-3-5-5z"/></svg></div>
+    <div class="sc-value" style="color:#22c55e">4</div>
+    <div class="sc-title">物种数量</div>
+    <div class="sc-sub">覆盖广泛</div>
+  </div>
+  <div class="sc-right">
+    <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+      <path d="M0.0,31.1 L9.1,30.3 L18.2,25.8 L27.3,25.9 L36.4,24.7 L45.5,19.8 L54.5,13.4 L63.6,12.5 L72.7,10.8 L81.8,13.5 L90.9,8.8 L100.0,9.1 L100,36 L0,36 Z" fill="rgba(34,197,94,0.10)" />
+      <path d="M0.0,31.1 L9.1,30.3 L18.2,25.8 L27.3,25.9 L36.4,24.7 L45.5,19.8 L54.5,13.4 L63.6,12.5 L72.7,10.8 L81.8,13.5 L90.9,8.8 L100.0,9.1" fill="none" stroke="#22c55e" stroke-width="2"/>
+    </svg>
+  </div>
+</div>
+<div class="stat-card">
+  <div class="sc-left">
+    <div class="sc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+    <div class="sc-value" style="color:#8b5cf6">4</div>
+    <div class="sc-title">数据类型（组学）</div>
+    <div class="sc-sub">多组学整合</div>
+  </div>
+  <div class="sc-right">
+    <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+      <path d="M0.0,27.7 L9.1,24.7 L18.2,22.3 L27.3,19.1 L36.4,18.9 L45.5,15.3 L54.5,21.1 L63.6,15.4 L72.7,9.3 L81.8,9.8 L90.9,5.7 L100.0,10.5 L100,36 L0,36 Z" fill="rgba(139,92,246,0.10)" />
+      <path d="M0.0,27.7 L9.1,24.7 L18.2,22.3 L27.3,19.1 L36.4,18.9 L45.5,15.3 L54.5,21.1 L63.6,15.4 L72.7,9.3 L81.8,9.8 L90.9,5.7 L100.0,10.5" fill="none" stroke="#8b5cf6" stroke-width="2"/>
+    </svg>
+  </div>
+</div>
+</div>
+<div class="chart-grid">
+<div class="chart-card">
+  <h3>数据规模（数据量）</h3>
+  <div id="trend" style="height:300px"></div>
+</div>
+<div class="chart-card">
+  <h3>数据类型（组学）分布</h3>
+  <div id="omics-donut" style="height:300px"></div>
+</div>
+<div class="chart-card">
+  <h3>物种分布（Top 10）</h3>
+  <svg id="circle-packing" width="380" height="300"></svg>
+</div>
+<div class="chart-card">
+  <h3>组织分布（Top 10）</h3>
+  <p style="font-size:12px;color:#64748b;margin-bottom:14px">数据覆盖多种组织类别，以部分类别最为丰富</p>
+  <div class="tissue-grid">
+    <div class="tissue-cell">
+      <div class="tissue-icon-wrap" style="background:#fef3c7">🫘</div>
+      <div class="tissue-name">肾脏</div>
+      <div class="tissue-pct">10.0%</div>
+    </div>
+    <div class="tissue-cell">
+      <div class="tissue-icon-wrap" style="background:#dcfce7">🧠</div>
+      <div class="tissue-name">脑组织</div>
+      <div class="tissue-pct">9.0%</div>
+    </div>
+    <div class="tissue-cell">
+      <div class="tissue-icon-wrap" style="background:#dbeafe">🫁</div>
+      <div class="tissue-name">肝脏</div>
+      <div class="tissue-pct">9.0%</div>
+    </div>
+    <div class="tissue-cell">
+      <div class="tissue-icon-wrap" style="background:#f0fdf4">🫁</div>
+      <div class="tissue-name">肺组织</div>
+      <div class="tissue-pct">8.0%</div>
+    </div>
+    <div class="tissue-cell">
+      <div class="tissue-icon-wrap" style="background:#fce7f3">❤️</div>
+      <div class="tissue-name">心脏</div>
+      <div class="tissue-pct">7.0%</div>
+    </div>
+    <div class="tissue-cell">
+      <div class="tissue-icon-wrap" style="background:#f0fdf4">🧪</div>
+      <div class="tissue-name">胰腺</div>
+      <div class="tissue-pct">7.0%</div>
+    </div>
+    <div class="tissue-cell">
+      <div class="tissue-icon-wrap" style="background:#fce7f3">🔬</div>
+      <div class="tissue-name">乳腺</div>
+      <div class="tissue-pct">6.0%</div>
+    </div>
+    <div class="tissue-cell">
+      <div class="tissue-icon-wrap" style="background:#fef9c3">🧬</div>
+      <div class="tissue-name">皮肤</div>
+      <div class="tissue-pct">6.0%</div>
+    </div>
+    <div class="tissue-cell">
+      <div class="tissue-icon-wrap" style="background:#fce7f3">🔬</div>
+      <div class="tissue-name">卵巢</div>
+      <div class="tissue-pct">6.0%</div>
+    </div>
+    <div class="tissue-cell">
+      <div class="tissue-icon-wrap" style="background:#f1f5f9">
+        <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="4" cy="10" r="2" fill="#94a3b8"/><circle cx="10" cy="10" r="2" fill="#94a3b8"/><circle cx="16" cy="10" r="2" fill="#94a3b8"/></svg>
+      </div>
+      <div class="tissue-name">其他</div>
+      <div class="tissue-pct">32.0%</div>
+    </div>
+  </div>
+</div>
+<div class="chart-card">
+  <h3>疾病类型分布（Top 10）</h3>
+  <div id="disease-bar" style="height:300px"></div>
+</div>
+<div class="chart-card list-card">
+<h3>最新更新 &amp; 最常引用数据集</h3>
+<div class="list-cols">
+<div class="list-col"><div class="list-col-title">最新更新</div>
+<div class="list-item">
+  <span class="li-dot"></span>
+  <span class="li-name">S100 · 脑组织 · 癫痫</span>
+  <span class="li-tag">转录组</span>
+</div>
+<div class="list-item">
+  <span class="li-dot"></span>
+  <span class="li-name">S099 · 胰腺 · 胰岛细胞瘤</span>
+  <span class="li-tag">表观基因组</span>
+</div>
+<div class="list-item">
+  <span class="li-dot"></span>
+  <span class="li-name">S098 · 结肠 · 腺瘤</span>
+  <span class="li-tag">蛋白质组</span>
+</div>
+<div class="list-item">
+  <span class="li-dot"></span>
+  <span class="li-name">S097 · 卵巢 · 卵巢早衰</span>
+  <span class="li-tag">代谢组</span>
+</div>
+<div class="list-item">
+  <span class="li-dot"></span>
+  <span class="li-name">S096 · 肺组织 · 间皮瘤</span>
+  <span class="li-tag">转录组</span>
+</div>
+<div class="list-item">
+  <span class="li-dot"></span>
+  <span class="li-name">S095 · 肝脏 · 脂肪性肝炎</span>
+  <span class="li-tag">表观基因组</span>
+</div>
+</div>
+<div class="list-col"><div class="list-col-title">最常引用</div>
+<div class="list-item">
+  <span class="li-rank">#1</span>
+  <span class="li-name">S062 · 乳腺 · 正常</span>
+  <span class="li-cite">183 引用</span>
+  <span class="li-tag">蛋白质组</span>
+</div>
+<div class="list-item">
+  <span class="li-rank">#2</span>
+  <span class="li-name">S100 · 脑组织 · 癫痫</span>
+  <span class="li-cite">177 引用</span>
+  <span class="li-tag">转录组</span>
+</div>
+<div class="list-item">
+  <span class="li-rank">#3</span>
+  <span class="li-name">S036 · 脑组织 · 帕金森病</span>
+  <span class="li-cite">131 引用</span>
+  <span class="li-tag">表观基因组</span>
+</div>
+<div class="list-item">
+  <span class="li-rank">#4</span>
+  <span class="li-name">S078 · 肝脏 · 正常</span>
+  <span class="li-cite">233 引用</span>
+  <span class="li-tag">蛋白质组</span>
+</div>
+<div class="list-item">
+  <span class="li-rank">#5</span>
+  <span class="li-name">S096 · 肺组织 · 间皮瘤</span>
+  <span class="li-cite">125 引用</span>
+  <span class="li-tag">转录组</span>
+</div>
+<div class="list-item">
+  <span class="li-rank">#6</span>
+  <span class="li-name">S050 · 卵巢 · 多囊卵巢综合征</span>
+  <span class="li-cite">138 引用</span>
+  <span class="li-tag">蛋白质组</span>
+</div>
+</div></div></div>
+<div class="chart-card full-width">
+  <h3>物种 - 组织 - 疾病分布关系</h3>
+  <div id="sankey" style="height:520px"></div>
+</div>
+</div>
+</div>
+<script>
+
+var trend=echarts.init(document.getElementById('trend'));
+trend.setOption({
+  tooltip:{trigger:'axis'},
+  legend:{data:['数据集数量','样本数量'],top:0,right:0,textStyle:{fontSize:11}},
+  grid:{left:'10%',right:'10%',top:'15%',bottom:'12%'},
+  xAxis:{type:'category',data:["2019", "2020", "2021", "2022", "2023", "2024"],boundaryGap:false},
+  yAxis:[
+    {type:'value',name:'数据集',splitLine:{lineStyle:{type:'dashed',color:'#f0f0f0'}}},
+    {type:'value',name:'样本数',splitLine:{show:false}}
+  ],
+  series:[
+    {name:'数据集数量',type:'line',smooth:true,symbol:'circle',symbolSize:6,
+      lineStyle:{color:'#22c55e',width:2.5},
+      areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[
+        {offset:0,color:'rgba(34,197,94,0.25)'},{offset:1,color:'rgba(34,197,94,0.02)'}
+      ])},
+      itemStyle:{color:'#22c55e'},
+      data:[12, 25, 38, 55, 78, 100]},
+    {name:'样本数量',type:'line',smooth:true,yAxisIndex:1,symbol:'circle',symbolSize:6,
+      lineStyle:{color:'#3b82f6',width:2.5},
+      areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[
+        {offset:0,color:'rgba(59,130,246,0.20)'},{offset:1,color:'rgba(59,130,246,0.02)'}
+      ])},
+      itemStyle:{color:'#3b82f6'},
+      data:[15, 30, 42, 60, 82, 100]}
+  ]
+});
+
+var donut=echarts.init(document.getElementById('omics-donut'));
+donut.setOption({
+  tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},
+  legend:{orient:'vertical',right:10,top:'middle',textStyle:{fontSize:12}},
+  color:['#22c55e','#3b82f6','#8b5cf6','#f59e0b','#ef4444'],
+  series:[{
+    type:'pie',radius:['42%','72%'],center:['40%','50%'],
+    itemStyle:{borderRadius:6,borderColor:'#fff',borderWidth:2},
+    label:{show:false},
+    emphasis:{label:{show:true,fontSize:14,fontWeight:'bold'}},
+    data:[{"name": "转录组", "value": 27}, {"name": "蛋白质组", "value": 26}, {"name": "代谢组", "value": 25}, {"name": "表观基因组", "value": 22}]
+  }]
+});
+
+// Circle Packing (D3)
+(function(){
+  var cpData = {children:[{"name": "人类", "value": 50}, {"name": "小鼠", "value": 17}, {"name": "斑马鱼", "value": 17}, {"name": "大鼠", "value": 16}]};
+  var svg = d3.select('#circle-packing');
+  var w = 380, h = 300;
+  svg.attr('viewBox','0 0 '+w+' '+h);
+  var root = d3.hierarchy(cpData).sum(d=>d.value);
+  d3.pack().size([w,h]).padding(8)(root);
+  var color = d3.scaleOrdinal(['#86efac','#93c5fd','#c4b5fd','#fde68a']);
+  var nodes = root.descendants().filter(d=>!d.children);
+  svg.selectAll('circle').data(nodes).enter().append('circle')
+    .attr('cx',d=>d.x).attr('cy',d=>d.y).attr('r',d=>d.r)
+    .attr('fill',(d,i)=>color(i)).attr('opacity',0.8)
+    .attr('stroke',(d,i)=>d3.color(color(i)).darker(0.3)).attr('stroke-width',1.5);
+  svg.selectAll('.lbl').data(nodes).enter().append('text')
+    .attr('x',d=>d.x).attr('y',d=>d.y-6).attr('text-anchor','middle')
+    .style('font-size','13px').style('font-weight','700').style('fill','#1e293b')
+    .text(d=>d.data.name);
+  svg.selectAll('.val').data(nodes).enter().append('text')
+    .attr('x',d=>d.x).attr('y',d=>d.y+14).attr('text-anchor','middle')
+    .style('font-size','11px').style('fill','#475569')
+    .text(d=>d.data.value);
+})();
+
+
+var dbar=echarts.init(document.getElementById('disease-bar'));
+dbar.setOption({
+  tooltip:{},
+  grid:{left:'30%',right:'12%',top:'5%',bottom:'5%'},
+  xAxis:{type:'value',splitLine:{lineStyle:{type:'dashed',color:'#f0f0f0'}}},
+  yAxis:{type:'category',data:["肝癌", "黑色素瘤", "发育异常", "乳腺癌", "结直肠癌", "糖尿病肾病", "肺癌", "心肌病", "阿尔茨海默病", "正常"],axisLabel:{fontSize:12}},
+  series:[{type:'bar',data:[1, 1, 1, 1, 1, 1, 1, 1, 1, 18],barWidth:16,
+    itemStyle:{borderRadius:[0,4,4,0],
+      color:new echarts.graphic.LinearGradient(0,0,1,0,[
+        {offset:0,color:'#16a34a'},{offset:1,color:'#4ade80'}
+      ])
+    },
+    label:{show:true,position:'right',fontSize:11,color:'#64748b'}
+  }]
+});
+
+var sk=echarts.init(document.getElementById('sankey'));
+sk.setOption({
+  tooltip:{trigger:'item'},
+  series:[{
+    type:'sankey',layoutIterations:32,nodeWidth:20,nodeGap:10,
+    emphasis:{focus:'adjacency'},
+    lineStyle:{color:'source',curveness:0.5,opacity:0.35},
+    label:{fontSize:11},
+    data:[{"name": "乳腺"}, {"name": "乳腺炎"}, {"name": "乳腺癌"}, {"name": "人类"}, {"name": "伤口愈合"}, {"name": "克罗恩病"}, {"name": "免疫缺陷"}, {"name": "前列腺"}, {"name": "前列腺增生"}, {"name": "前列腺炎"}, {"name": "前列腺癌"}, {"name": "卵子发生"}, {"name": "卵巢"}, {"name": "卵巢囊肿"}, {"name": "卵巢早衰"}, {"name": "卵巢癌"}, {"name": "发育"}, {"name": "发育异常"}, {"name": "哮喘"}, {"name": "多囊卵巢综合征"}, {"name": "大鼠"}, {"name": "子宫"}, {"name": "子宫内膜癌"}, {"name": "导管原位癌"}, {"name": "小鼠"}, {"name": "帕金森病"}, {"name": "心力衰竭"}, {"name": "心律失常"}, {"name": "心肌梗死"}, {"name": "心肌炎"}, {"name": "心肌病"}, {"name": "心脏"}, {"name": "心脏再生"}, {"name": "感染"}, {"name": "慢性阻塞性肺病"}, {"name": "斑马鱼"}, {"name": "正常"}, {"name": "淋巴瘤"}, {"name": "湿疹"}, {"name": "溃疡性结肠炎"}, {"name": "炎症性肠病"}, {"name": "烧伤"}, {"name": "狼疮性肾炎"}, {"name": "甲状腺"}, {"name": "甲状腺炎"}, {"name": "甲状腺癌"}, {"name": "癫痫"}, {"name": "白血病"}, {"name": "皮肤"}, {"name": "神经退行性病变"}, {"name": "糖尿病"}, {"name": "糖尿病肾病"}, {"name": "结直肠癌"}, {"name": "结肠"}, {"name": "结肠炎"}, {"name": "缺氧"}, {"name": "肝再生"}, {"name": "肝癌"}, {"name": "肝硬化"}, {"name": "肝纤维化"}, {"name": "肝脏"}, {"name": "肠道"}, {"name": "肺炎"}, {"name": "肺癌"}, {"name": "肺纤维化"}, {"name": "肺组织"}, {"name": "肾功能不全"}, {"name": "肾损伤"}, {"name": "肾病综合征"}, {"name": "肾细胞癌"}, {"name": "肾结石"}, {"name": "肾脏"}, {"name": "肾衰竭"}, {"name": "胃"}, {"name": "胃溃疡"}, {"name": "胃炎"}, {"name": "胃癌"}, {"name": "胚胎"}, {"name": "胰岛炎"}, {"name": "胰岛细胞瘤"}, {"name": "胰腺"}, {"name": "胰腺炎"}, {"name": "胰腺癌"}, {"name": "脂肪性肝炎"}, {"name": "脂肪肝"}, {"name": "脑炎"}, {"name": "脑组织"}, {"name": "脑缺血"}, {"name": "脑肿瘤"}, {"name": "脾脏"}, {"name": "腺瘤"}, {"name": "膀胱"}, {"name": "膀胱炎"}, {"name": "膀胱癌"}, {"name": "自身免疫病"}, {"name": "色素沉着"}, {"name": "药物性肾损伤"}, {"name": "贫血"}, {"name": "酒精性肝病"}, {"name": "银屑病"}, {"name": "间皮瘤"}, {"name": "阿尔茨海默病"}, {"name": "食管"}, {"name": "食管癌"}, {"name": "骨髓"}, {"name": "高血压"}, {"name": "黑色素瘤"}],
+    links:[{"source": "人类", "target": "脑组织", "value": 4}, {"source": "小鼠", "target": "肝脏", "value": 2}, {"source": "斑马鱼", "target": "心脏", "value": 3}, {"source": "人类", "target": "肺组织", "value": 4}, {"source": "大鼠", "target": "肾脏", "value": 3}, {"source": "人类", "target": "结肠", "value": 4}, {"source": "小鼠", "target": "脾脏", "value": 1}, {"source": "人类", "target": "乳腺", "value": 4}, {"source": "斑马鱼", "target": "胚胎", "value": 1}, {"source": "人类", "target": "皮肤", "value": 3}, {"source": "小鼠", "target": "脑组织", "value": 2}, {"source": "人类", "target": "肝脏", "value": 4}, {"source": "大鼠", "target": "心脏", "value": 2}, {"source": "人类", "target": "肾脏", "value": 3}, {"source": "斑马鱼", "target": "脾脏", "value": 2}, {"source": "人类", "target": "胰腺", "value": 3}, {"source": "小鼠", "target": "肺组织", "value": 2}, {"source": "人类", "target": "卵巢", "value": 3}, {"source": "大鼠", "target": "乳腺", "value": 1}, {"source": "人类", "target": "前列腺", "value": 3}, {"source": "斑马鱼", "target": "脑组织", "value": 1}, {"source": "人类", "target": "胃", "value": 2}, {"source": "小鼠", "target": "肠道", "value": 1}, {"source": "人类", "target": "骨髓", "value": 2}, {"source": "大鼠", "target": "肝脏", "value": 1}, {"source": "人类", "target": "子宫", "value": 2}, {"source": "斑马鱼", "target": "肾脏", "value": 2}, {"source": "人类", "target": "甲状腺", "value": 3}, {"source": "小鼠", "target": "胰腺", "value": 2}, {"source": "人类", "target": "膀胱", "value": 2}, {"source": "大鼠", "target": "肺组织", "value": 1}, {"source": "小鼠", "target": "肾脏", "value": 2}, {"source": "大鼠", "target": "脾脏", "value": 1}, {"source": "斑马鱼", "target": "卵巢", "value": 1}, {"source": "小鼠", "target": "心脏", "value": 1}, {"source": "大鼠", "target": "脑组织", "value": 2}, {"source": "斑马鱼", "target": "肝脏", "value": 2}, {"source": "小鼠", "target": "皮肤", "value": 1}, {"source": "斑马鱼", "target": "肺组织", "value": 1}, {"source": "小鼠", "target": "骨髓", "value": 1}, {"source": "人类", "target": "肠道", "value": 1}, {"source": "大鼠", "target": "皮肤", "value": 1}, {"source": "小鼠", "target": "胃", "value": 1}, {"source": "斑马鱼", "target": "乳腺", "value": 1}, {"source": "大鼠", "target": "胰腺", "value": 1}, {"source": "斑马鱼", "target": "皮肤", "value": 1}, {"source": "大鼠", "target": "结肠", "value": 1}, {"source": "人类", "target": "脾脏", "value": 1}, {"source": "小鼠", "target": "卵巢", "value": 1}, {"source": "人类", "target": "食管", "value": 1}, {"source": "大鼠", "target": "膀胱", "value": 1}, {"source": "人类", "target": "心脏", "value": 1}, {"source": "斑马鱼", "target": "前列腺", "value": 1}, {"source": "大鼠", "target": "卵巢", "value": 1}, {"source": "斑马鱼", "target": "胰腺", "value": 1}, {"source": "脑组织", "target": "阿尔茨海默病", "value": 1}, {"source": "肝脏", "target": "正常", "value": 2}, {"source": "心脏", "target": "心肌病", "value": 1}, {"source": "肺组织", "target": "肺癌", "value": 1}, {"source": "肾脏", "target": "糖尿病肾病", "value": 1}, {"source": "结肠", "target": "结直肠癌", "value": 1}, {"source": "脾脏", "target": "正常", "value": 1}, {"source": "乳腺", "target": "乳腺癌", "value": 1}, {"source": "胚胎", "target": "发育异常", "value": 1}, {"source": "皮肤", "target": "黑色素瘤", "value": 1}, {"source": "脑组织", "target": "正常", "value": 2}, {"source": "肝脏", "target": "肝癌", "value": 1}, {"source": "心脏", "target": "心力衰竭", "value": 1}, {"source": "肾脏", "target": "肾细胞癌", "value": 1}, {"source": "脾脏", "target": "感染", "value": 1}, {"source": "胰腺", "target": "胰腺癌", "value": 1}, {"source": "肺组织", "target": "肺炎", "value": 1}, {"source": "卵巢", "target": "卵巢癌", "value": 1}, {"source": "乳腺", "target": "正常", "value": 2}, {"source": "前列腺", "target": "前列腺癌", "value": 1}, {"source": "脑组织", "target": "神经退行性病变", "value": 1}, {"source": "胃", "target": "胃癌", "value": 1}, {"source": "肠道", "target": "炎症性肠病", "value": 1}, {"source": "骨髓", "target": "白血病", "value": 1}, {"source": "肝脏", "target": "肝纤维化", "value": 1}, {"source": "子宫", "target": "子宫内膜癌", "value": 1}, {"source": "肾脏", "target": "肾损伤", "value": 1}, {"source": "甲状腺", "target": "甲状腺癌", "value": 1}, {"source": "胰腺", "target": "正常", "value": 2}, {"source": "膀胱", "target": "膀胱癌", "value": 1}, {"source": "肺组织", "target": "肺纤维化", "value": 1}, {"source": "皮肤", "target": "银屑病", "value": 1}, {"source": "心脏", "target": "心脏再生", "value": 1}, {"source": "肝脏", "target": "酒精性肝病", "value": 1}, {"source": "肾脏", "target": "肾衰竭", "value": 1}, {"source": "脑组织", "target": "帕金森病", "value": 1}, {"source": "脾脏", "target": "自身免疫病", "value": 1}, {"source": "结肠", "target": "溃疡性结肠炎", "value": 1}, {"source": "卵巢", "target": "卵子发生", "value": 1}, {"source": "肺组织", "target": "慢性阻塞性肺病", "value": 1}, {"source": "心脏", "target": "心肌梗死", "value": 1}, {"source": "乳腺", "target": "乳腺炎", "value": 1}, {"source": "脑组织", "target": "脑缺血", "value": 1}, {"source": "肾脏", "target": "狼疮性肾炎", "value": 1}, {"source": "肝脏", "target": "脂肪肝", "value": 1}, {"source": "胃", "target": "胃炎", "value": 1}, {"source": "皮肤", "target": "伤口愈合", "value": 1}, {"source": "胰腺", "target": "糖尿病", "value": 1}, {"source": "心脏", "target": "高血压", "value": 1}, {"source": "卵巢", "target": "多囊卵巢综合征", "value": 1}, {"source": "肺组织", "target": "缺氧", "value": 1}, {"source": "前列腺", "target": "前列腺炎", "value": 1}, {"source": "骨髓", "target": "贫血", "value": 1}, {"source": "甲状腺", "target": "甲状腺炎", "value": 1}, {"source": "肾脏", "target": "肾病综合征", "value": 1}, {"source": "皮肤", "target": "湿疹", "value": 1}, {"source": "脾脏", "target": "免疫缺陷", "value": 1}, {"source": "肝脏", "target": "肝硬化", "value": 1}, {"source": "胰腺", "target": "胰腺炎", "value": 1}, {"source": "肠道", "target": "克罗恩病", "value": 1}, {"source": "脑组织", "target": "脑肿瘤", "value": 1}, {"source": "心脏", "target": "心律失常", "value": 1}, {"source": "结肠", "target": "正常", "value": 1}, {"source": "肺组织", "target": "哮喘", "value": 1}, {"source": "肾脏", "target": "正常", "value": 1}, {"source": "皮肤", "target": "烧伤", "value": 1}, {"source": "卵巢", "target": "正常", "value": 1}, {"source": "肝脏", "target": "肝再生", "value": 1}, {"source": "前列腺", "target": "正常", "value": 1}, {"source": "胃", "target": "胃溃疡", "value": 1}, {"source": "肾脏", "target": "肾结石", "value": 1}, {"source": "乳腺", "target": "发育", "value": 1}, {"source": "膀胱", "target": "正常", "value": 1}, {"source": "肾脏", "target": "药物性肾损伤", "value": 1}, {"source": "胰腺", "target": "胰岛炎", "value": 1}, {"source": "肺组织", "target": "正常", "value": 1}, {"source": "皮肤", "target": "色素沉着", "value": 1}, {"source": "子宫", "target": "正常", "value": 1}, {"source": "脑组织", "target": "脑炎", "value": 1}, {"source": "甲状腺", "target": "正常", "value": 1}, {"source": "结肠", "target": "结肠炎", "value": 1}, {"source": "脾脏", "target": "淋巴瘤", "value": 1}, {"source": "肾脏", "target": "肾功能不全", "value": 1}, {"source": "骨髓", "target": "正常", "value": 1}, {"source": "卵巢", "target": "卵巢囊肿", "value": 1}, {"source": "食管", "target": "食管癌", "value": 1}, {"source": "膀胱", "target": "膀胱炎", "value": 1}, {"source": "心脏", "target": "心肌炎", "value": 1}, {"source": "前列腺", "target": "前列腺增生", "value": 1}, {"source": "乳腺", "target": "导管原位癌", "value": 1}, {"source": "肝脏", "target": "脂肪性肝炎", "value": 1}, {"source": "肺组织", "target": "间皮瘤", "value": 1}, {"source": "卵巢", "target": "卵巢早衰", "value": 1}, {"source": "结肠", "target": "腺瘤", "value": 1}, {"source": "胰腺", "target": "胰岛细胞瘤", "value": 1}, {"source": "脑组织", "target": "癫痫", "value": 1}]
+  }]
+});
+
+window.addEventListener('resize',function(){
+  [trend,donut,dbar,sk].forEach(function(c){c.resize()});
+});
+</script>
+</body>
+</html>

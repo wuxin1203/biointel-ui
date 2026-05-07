@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BioIntelOS - Multi-omics Data Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#334155}
+.container{max-width:1400px;margin:0 auto;padding:32px}
+.header{margin-bottom:24px}
+.header h1{font-size:32px;color:#16a34a;font-weight:700}
+.header p{color:#94a3b8;font-size:14px;margin-top:4px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);text-align:center}
+.stat-card .value{font-size:36px;font-weight:700;color:#16a34a}
+.stat-card .label{font-size:13px;color:#94a3b8;margin-top:4px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.chart-card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.chart-card h3{font-size:16px;margin-bottom:4px}
+.chart-card .desc{font-size:12px;color:#94a3b8;margin-bottom:12px}
+.full-width{grid-column:1/-1}
+.table-wrap{background:#fff;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-top:20px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f1f5f9;padding:10px 12px;text-align:left;font-weight:600}
+td{padding:8px 12px;border-bottom:1px solid #f1f5f9}
+tr:hover td{background:#f8fafc}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>BioIntelOS</h1>
+  <p>Multi-omics Data Portal</p>
+</div>
+
+<div class="stats">
+  <div class="stat-card"><div class="value">100</div><div class="label">Datasets</div></div>
+  <div class="stat-card"><div class="value">4</div><div class="label">Species</div></div>
+  <div class="stat-card"><div class="value">20</div><div class="label">Tissues</div></div>
+  <div class="stat-card"><div class="value">83</div><div class="label">Diseases</div></div>
+  <div class="stat-card"><div class="value">4</div><div class="label">Omics</div></div>
+</div>
+
+<div class="charts">
+  <div class="chart-card">
+    <h3>Species Distribution</h3>
+    <div class="desc">Circle Packing view</div>
+    <svg id="circle-packing" width="100%" height="320"></svg>
+  </div>
+  <div class="chart-card">
+    <h3>Omics Distribution</h3>
+    <div class="desc">Data types overview</div>
+    <div id="omics-pie" style="height:320px"></div>
+  </div>
+  <div class="chart-card">
+    <h3>Tissue Distribution</h3>
+    <div class="desc">Top tissues by dataset count</div>
+    <div id="tissue-bar" style="height:320px"></div>
+  </div>
+  <div class="chart-card">
+    <h3>Species × Omics</h3>
+    <div class="desc">Cross-tabulation heatmap</div>
+    <div id="species-omics" style="height:320px"></div>
+  </div>
+  <div class="chart-card full-width">
+    <h3>Species → Tissue → Disease Sankey</h3>
+    <div class="desc">Flow from species through tissue to disease</div>
+    <div id="sankey" style="height:500px"></div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <h3 style="margin-bottom:12px">Dataset Table</h3>
+  <table>
+    <thead><tr><th>样本ID</th><th>细胞数</th><th>物种</th><th>组织</th><th>疾病</th><th>组学类型</th></tr></thead>
+    <tbody>
+<tr><td>S001</td><td>1523</td><td>人类</td><td>脑组织</td><td>阿尔茨海默病</td><td>转录组</td></tr>
+<tr><td>S002</td><td>2841</td><td>小鼠</td><td>肝脏</td><td>正常</td><td>蛋白质组</td></tr>
+<tr><td>S003</td><td>976</td><td>斑马鱼</td><td>心脏</td><td>心肌病</td><td>代谢组</td></tr>
+<tr><td>S004</td><td>3200</td><td>人类</td><td>肺组织</td><td>肺癌</td><td>转录组</td></tr>
+<tr><td>S005</td><td>1850</td><td>大鼠</td><td>肾脏</td><td>糖尿病肾病</td><td>表观基因组</td></tr>
+<tr><td>S006</td><td>2100</td><td>人类</td><td>结肠</td><td>结直肠癌</td><td>蛋白质组</td></tr>
+<tr><td>S007</td><td>1450</td><td>小鼠</td><td>脾脏</td><td>正常</td><td>代谢组</td></tr>
+<tr><td>S008</td><td>2980</td><td>人类</td><td>乳腺</td><td>乳腺癌</td><td>转录组</td></tr>
+<tr><td>S009</td><td>1345</td><td>斑马鱼</td><td>胚胎</td><td>发育异常</td><td>表观基因组</td></tr>
+<tr><td>S010</td><td>3670</td><td>人类</td><td>皮肤</td><td>黑色素瘤</td><td>蛋白质组</td></tr>
+<tr><td>S011</td><td>1750</td><td>小鼠</td><td>脑组织</td><td>正常</td><td>转录组</td></tr>
+<tr><td>S012</td><td>2400</td><td>人类</td><td>肝脏</td><td>肝癌</td><td>代谢组</td></tr>
+<tr><td>S013</td><td>980</td><td>大鼠</td><td>心脏</td><td>心力衰竭</td><td>蛋白质组</td></tr>
+<tr><td>S014</td><td>4100</td><td>人类</td><td>肾脏</td><td>肾细胞癌</td><td>转录组</td></tr>
+<tr><td>S015</td><td>1920</td><td>斑马鱼</td><td>脾脏</td><td>感染</td><td>表观基因组</td></tr>
+<tr><td>S016</td><td>2840</td><td>人类</td><td>胰腺</td><td>胰腺癌</td><td>代谢组</td></tr>
+<tr><td>S017</td><td>1350</td><td>小鼠</td><td>肺组织</td><td>肺炎</td><td>蛋白质组</td></tr>
+<tr><td>S018</td><td>3570</td><td>人类</td><td>卵巢</td><td>卵巢癌</td><td>转录组</td></tr>
+<tr><td>S019</td><td>1120</td><td>大鼠</td><td>乳腺</td><td>正常</td><td>代谢组</td></tr>
+<tr><td>S020</td><td>2670</td><td>人类</td><td>前列腺</td><td>前列腺癌</td><td>表观基因组</td></tr>
+<tr><td>S021</td><td>1980</td><td>斑马鱼</td><td>脑组织</td><td>神经退行性病变</td><td>蛋白质组</td></tr>
+<tr><td>S022</td><td>3210</td><td>人类</td><td>胃</td><td>胃癌</td><td>转录组</td></tr>
+<tr><td>S023</td><td>1460</td><td>小鼠</td><td>肠道</td><td>炎症性肠病</td><td>代谢组</td></tr>
+<tr><td>S024</td><td>2750</td><td>人类</td><td>骨髓</td><td>白血病</td><td>蛋白质组</td></tr>
+<tr><td>S025</td><td>1890</td><td>大鼠</td><td>肝脏</td><td>肝纤维化</td><td>表观基因组</td></tr>
+<tr><td>S026</td><td>3040</td><td>人类</td><td>子宫</td><td>子宫内膜癌</td><td>转录组</td></tr>
+<tr><td>S027</td><td>1670</td><td>斑马鱼</td><td>肾脏</td><td>肾损伤</td><td>代谢组</td></tr>
+<tr><td>S028</td><td>2930</td><td>人类</td><td>甲状腺</td><td>甲状腺癌</td><td>蛋白质组</td></tr>
+<tr><td>S029</td><td>1250</td><td>小鼠</td><td>胰腺</td><td>正常</td><td>转录组</td></tr>
+<tr><td>S030</td><td>3480</td><td>人类</td><td>膀胱</td><td>膀胱癌</td><td>表观基因组</td></tr>
+<tr><td>S031</td><td>2090</td><td>大鼠</td><td>肺组织</td><td>肺纤维化</td><td>代谢组</td></tr>
+<tr><td>S032</td><td>3850</td><td>人类</td><td>皮肤</td><td>银屑病</td><td>蛋白质组</td></tr>
+<tr><td>S033</td><td>1580</td><td>斑马鱼</td><td>心脏</td><td>心脏再生</td><td>转录组</td></tr>
+<tr><td>S034</td><td>3120</td><td>人类</td><td>肝脏</td><td>酒精性肝病</td><td>代谢组</td></tr>
+<tr><td>S035</td><td>1770</td><td>小鼠</td><td>肾脏</td><td>肾衰竭</td><td>蛋白质组</td></tr>
+<tr><td>S036</td><td>4260</td><td>人类</td><td>脑组织</td><td>帕金森病</td><td>表观基因组</td></tr>
+<tr><td>S037</td><td>1430</td><td>大鼠</td><td>脾脏</td><td>自身免疫病</td><td>转录组</td></tr>
+<tr><td>S038</td><td>2940</td><td>人类</td><td>结肠</td><td>溃疡性结肠炎</td><td>代谢组</td></tr>
+<tr><td>S039</td><td>2010</td><td>斑马鱼</td><td>卵巢</td><td>卵子发生</td><td>蛋白质组</td></tr>
+<tr><td>S040</td><td>3590</td><td>人类</td><td>肺组织</td><td>慢性阻塞性肺病</td><td>转录组</td></tr>
+<tr><td>S041</td><td>1680</td><td>小鼠</td><td>心脏</td><td>心肌梗死</td><td>表观基因组</td></tr>
+<tr><td>S042</td><td>3070</td><td>人类</td><td>乳腺</td><td>乳腺炎</td><td>代谢组</td></tr>
+<tr><td>S043</td><td>1390</td><td>大鼠</td><td>脑组织</td><td>脑缺血</td><td>蛋白质组</td></tr>
+<tr><td>S044</td><td>2760</td><td>人类</td><td>肾脏</td><td>狼疮性肾炎</td><td>转录组</td></tr>
+<tr><td>S045</td><td>2240</td><td>斑马鱼</td><td>肝脏</td><td>脂肪肝</td><td>代谢组</td></tr>
+<tr><td>S046</td><td>3910</td><td>人类</td><td>胃</td><td>胃炎</td><td>蛋白质组</td></tr>
+<tr><td>S047</td><td>1550</td><td>小鼠</td><td>皮肤</td><td>伤口愈合</td><td>表观基因组</td></tr>
+<tr><td>S048</td><td>3330</td><td>人类</td><td>胰腺</td><td>糖尿病</td><td>转录组</td></tr>
+<tr><td>S049</td><td>1860</td><td>大鼠</td><td>心脏</td><td>高血压</td><td>代谢组</td></tr>
+<tr><td>S050</td><td>4180</td><td>人类</td><td>卵巢</td><td>多囊卵巢综合征</td><td>蛋白质组</td></tr>
+<tr><td>S051</td><td>1310</td><td>斑马鱼</td><td>肺组织</td><td>缺氧</td><td>表观基因组</td></tr>
+<tr><td>S052</td><td>3020</td><td>人类</td><td>前列腺</td><td>前列腺炎</td><td>转录组</td></tr>
+<tr><td>S053</td><td>1720</td><td>小鼠</td><td>骨髓</td><td>贫血</td><td>代谢组</td></tr>
+<tr><td>S054</td><td>2890</td><td>人类</td><td>甲状腺</td><td>甲状腺炎</td><td>蛋白质组</td></tr>
+<tr><td>S055</td><td>2470</td><td>大鼠</td><td>肾脏</td><td>肾病综合征</td><td>表观基因组</td></tr>
+<tr><td>S056</td><td>3640</td><td>人类</td><td>皮肤</td><td>湿疹</td><td>转录组</td></tr>
+<tr><td>S057</td><td>1960</td><td>斑马鱼</td><td>脾脏</td><td>免疫缺陷</td><td>代谢组</td></tr>
+<tr><td>S058</td><td>3150</td><td>人类</td><td>肝脏</td><td>肝硬化</td><td>蛋白质组</td></tr>
+<tr><td>S059</td><td>1490</td><td>小鼠</td><td>胰腺</td><td>胰腺炎</td><td>表观基因组</td></tr>
+<tr><td>S060</td><td>3720</td><td>人类</td><td>肠道</td><td>克罗恩病</td><td>转录组</td></tr>
+<tr><td>S061</td><td>2130</td><td>大鼠</td><td>脑组织</td><td>脑肿瘤</td><td>代谢组</td></tr>
+<tr><td>S062</td><td>4380</td><td>人类</td><td>乳腺</td><td>正常</td><td>蛋白质组</td></tr>
+<tr><td>S063</td><td>1620</td><td>斑马鱼</td><td>心脏</td><td>心律失常</td><td>表观基因组</td></tr>
+<tr><td>S064</td><td>3410</td><td>人类</td><td>结肠</td><td>正常</td><td>转录组</td></tr>
+<tr><td>S065</td><td>1900</td><td>小鼠</td><td>肺组织</td><td>哮喘</td><td>代谢组</td></tr>
+<tr><td>S066</td><td>4050</td><td>人类</td><td>肾脏</td><td>正常</td><td>蛋白质组</td></tr>
+<tr><td>S067</td><td>1780</td><td>大鼠</td><td>皮肤</td><td>烧伤</td><td>表观基因组</td></tr>
+<tr><td>S068</td><td>3260</td><td>人类</td><td>卵巢</td><td>正常</td><td>转录组</td></tr>
+<tr><td>S069</td><td>1410</td><td>斑马鱼</td><td>肝脏</td><td>肝再生</td><td>代谢组</td></tr>
+<tr><td>S070</td><td>3690</td><td>人类</td><td>前列腺</td><td>正常</td><td>蛋白质组</td></tr>
+<tr><td>S071</td><td>1530</td><td>小鼠</td><td>胃</td><td>胃溃疡</td><td>表观基因组</td></tr>
+<tr><td>S072</td><td>2880</td><td>人类</td><td>胰腺</td><td>正常</td><td>转录组</td></tr>
+<tr><td>S073</td><td>2310</td><td>大鼠</td><td>肾脏</td><td>肾结石</td><td>代谢组</td></tr>
+<tr><td>S074</td><td>3940</td><td>人类</td><td>脑组织</td><td>正常</td><td>蛋白质组</td></tr>
+<tr><td>S075</td><td>1640</td><td>斑马鱼</td><td>乳腺</td><td>发育</td><td>表观基因组</td></tr>
+<tr><td>S076</td><td>3080</td><td>人类</td><td>膀胱</td><td>正常</td><td>转录组</td></tr>
+<tr><td>S077</td><td>1800</td><td>小鼠</td><td>肾脏</td><td>药物性肾损伤</td><td>代谢组</td></tr>
+<tr><td>S078</td><td>4230</td><td>人类</td><td>肝脏</td><td>正常</td><td>蛋白质组</td></tr>
+<tr><td>S079</td><td>1290</td><td>大鼠</td><td>胰腺</td><td>胰岛炎</td><td>表观基因组</td></tr>
+<tr><td>S080</td><td>3520</td><td>人类</td><td>肺组织</td><td>正常</td><td>转录组</td></tr>
+<tr><td>S081</td><td>2050</td><td>斑马鱼</td><td>皮肤</td><td>色素沉着</td><td>代谢组</td></tr>
+<tr><td>S082</td><td>3770</td><td>人类</td><td>子宫</td><td>正常</td><td>蛋白质组</td></tr>
+<tr><td>S083</td><td>1480</td><td>小鼠</td><td>脑组织</td><td>脑炎</td><td>表观基因组</td></tr>
+<tr><td>S084</td><td>2950</td><td>人类</td><td>甲状腺</td><td>正常</td><td>转录组</td></tr>
+<tr><td>S085</td><td>2410</td><td>大鼠</td><td>结肠</td><td>结肠炎</td><td>代谢组</td></tr>
+<tr><td>S086</td><td>3830</td><td>人类</td><td>脾脏</td><td>淋巴瘤</td><td>蛋白质组</td></tr>
+<tr><td>S087</td><td>1590</td><td>斑马鱼</td><td>肾脏</td><td>肾功能不全</td><td>表观基因组</td></tr>
+<tr><td>S088</td><td>3370</td><td>人类</td><td>骨髓</td><td>正常</td><td>转录组</td></tr>
+<tr><td>S089</td><td>1700</td><td>小鼠</td><td>卵巢</td><td>卵巢囊肿</td><td>代谢组</td></tr>
+<tr><td>S090</td><td>4000</td><td>人类</td><td>食管</td><td>食管癌</td><td>蛋白质组</td></tr>
+<tr><td>S091</td><td>1880</td><td>大鼠</td><td>膀胱</td><td>膀胱炎</td><td>表观基因组</td></tr>
+<tr><td>S092</td><td>3450</td><td>人类</td><td>心脏</td><td>心肌炎</td><td>转录组</td></tr>
+<tr><td>S093</td><td>1200</td><td>斑马鱼</td><td>前列腺</td><td>前列腺增生</td><td>代谢组</td></tr>
+<tr><td>S094</td><td>2860</td><td>人类</td><td>乳腺</td><td>导管原位癌</td><td>蛋白质组</td></tr>
+<tr><td>S095</td><td>2180</td><td>小鼠</td><td>肝脏</td><td>脂肪性肝炎</td><td>表观基因组</td></tr>
+<tr><td>S096</td><td>4190</td><td>人类</td><td>肺组织</td><td>间皮瘤</td><td>转录组</td></tr>
+<tr><td>S097</td><td>1420</td><td>大鼠</td><td>卵巢</td><td>卵巢早衰</td><td>代谢组</td></tr>
+<tr><td>S098</td><td>3550</td><td>人类</td><td>结肠</td><td>腺瘤</td><td>蛋白质组</td></tr>
+<tr><td>S099</td><td>2010</td><td>斑马鱼</td><td>胰腺</td><td>胰岛细胞瘤</td><td>表观基因组</td></tr>
+<tr><td>S100</td><td>4380</td><td>人类</td><td>脑组织</td><td>癫痫</td><td>转录组</td></tr>
+
+    </tbody>
+  </table>
+</div>
+
+<script>
+// Circle Packing (D3)
+(function() {
+  var cpData = {children: [{"name": "人类", "value": 50}, {"name": "小鼠", "value": 17}, {"name": "斑马鱼", "value": 17}, {"name": "大鼠", "value": 16}]};
+  var svg = d3.select('#circle-packing');
+  var w = svg.node().getBoundingClientRect().width || 400;
+  var h = 320;
+  svg.attr('viewBox', '0 0 '+w+' '+h);
+  var root = d3.hierarchy(cpData).sum(d => d.value);
+  d3.pack().size([w, h]).padding(20)(root);
+  var color = d3.scaleOrdinal(['#22c55e','#3b82f6','#f59e0b','#ef4444']);
+  var nodes = root.descendants().filter(d => !d.children);
+  svg.selectAll('circle').data(nodes).enter().append('circle')
+    .attr('cx',d=>d.x).attr('cy',d=>d.y).attr('r',d=>d.r)
+    .attr('fill',(d,i)=>color(i)).attr('opacity',0.7);
+  svg.selectAll('text').data(nodes).enter().append('text')
+    .attr('x',d=>d.x).attr('y',d=>d.y-8).attr('text-anchor','middle')
+    .style('font-size','13px').style('font-weight','600').text(d=>d.data.name);
+  svg.selectAll('.val').data(nodes).enter().append('text')
+    .attr('x',d=>d.x).attr('y',d=>d.y+12).attr('text-anchor','middle')
+    .style('font-size','11px').style('fill','#555').text(d=>d.data.value);
+})();
+
+// Omics Pie
+echarts.init(document.getElementById('omics-pie')).setOption({
+  tooltip:{trigger:'item'},
+  color:['#22c55e','#3b82f6','#f59e0b','#ef4444','#8b5cf6'],
+  series:[{type:'pie',radius:['40%','70%'],itemStyle:{borderRadius:6},
+    label:{formatter:'{b}\n{d}%'},
+    data:[{"name": "转录组", "value": 27}, {"name": "蛋白质组", "value": 26}, {"name": "代谢组", "value": 25}, {"name": "表观基因组", "value": 22}]
+  }]
+});
+
+// Tissue Bar
+echarts.init(document.getElementById('tissue-bar')).setOption({
+  tooltip:{},
+  grid:{left:'25%',right:'10%',top:'5%',bottom:'5%'},
+  xAxis:{type:'value'},
+  yAxis:{type:'category',data:["甲状腺", "骨髓", "胃", "前列腺", "脾脏", "结肠", "卵巢", "皮肤", "乳腺", "胰腺", "心脏", "肺组织", "肝脏", "脑组织", "肾脏"]},
+  series:[{type:'bar',data:[3, 3, 3, 4, 5, 5, 6, 6, 6, 7, 7, 8, 9, 9, 10],
+    itemStyle:{color:'#22c55e',borderRadius:[0,4,4,0]}}]
+});
+
+// Species x Omics Heatmap
+echarts.init(document.getElementById('species-omics')).setOption({
+  tooltip:{position:'top'},
+  grid:{left:'18%',right:'15%',top:'10%',bottom:'18%'},
+  xAxis:{type:'category',data:["代谢组", "蛋白质组", "表观基因组", "转录组"],axisLabel:{rotate:30}},
+  yAxis:{type:'category',data:["人类", "大鼠", "小鼠", "斑马鱼"]},
+  visualMap:{min:0,max:23,calculable:true,orient:'vertical',right:0,top:'center',
+    inRange:{color:['#f0fdf4','#22c55e','#15803d']}},
+  series:[{type:'heatmap',data:[[0, 0, 5], [1, 0, 19], [2, 0, 3], [3, 0, 23], [0, 1, 7], [1, 1, 2], [2, 1, 6], [3, 1, 1], [0, 2, 6], [1, 2, 3], [2, 2, 6], [3, 2, 2], [0, 3, 7], [1, 3, 2], [2, 3, 7], [3, 3, 1]],label:{show:true}}]
+});
+
+// Sankey
+echarts.init(document.getElementById('sankey')).setOption({
+  tooltip:{trigger:'item'},
+  series:[{type:'sankey',layoutIterations:32,
+    emphasis:{focus:'adjacency'},
+    lineStyle:{color:'source',curveness:0.5},
+    data:[{"name": "乳腺"}, {"name": "乳腺炎"}, {"name": "乳腺癌"}, {"name": "人类"}, {"name": "伤口愈合"}, {"name": "克罗恩病"}, {"name": "免疫缺陷"}, {"name": "前列腺"}, {"name": "前列腺增生"}, {"name": "前列腺炎"}, {"name": "前列腺癌"}, {"name": "卵子发生"}, {"name": "卵巢"}, {"name": "卵巢囊肿"}, {"name": "卵巢早衰"}, {"name": "卵巢癌"}, {"name": "发育"}, {"name": "发育异常"}, {"name": "哮喘"}, {"name": "多囊卵巢综合征"}, {"name": "大鼠"}, {"name": "子宫"}, {"name": "子宫内膜癌"}, {"name": "导管原位癌"}, {"name": "小鼠"}, {"name": "帕金森病"}, {"name": "心力衰竭"}, {"name": "心律失常"}, {"name": "心肌梗死"}, {"name": "心肌炎"}, {"name": "心肌病"}, {"name": "心脏"}, {"name": "心脏再生"}, {"name": "感染"}, {"name": "慢性阻塞性肺病"}, {"name": "斑马鱼"}, {"name": "正常"}, {"name": "淋巴瘤"}, {"name": "湿疹"}, {"name": "溃疡性结肠炎"}, {"name": "炎症性肠病"}, {"name": "烧伤"}, {"name": "狼疮性肾炎"}, {"name": "甲状腺"}, {"name": "甲状腺炎"}, {"name": "甲状腺癌"}, {"name": "癫痫"}, {"name": "白血病"}, {"name": "皮肤"}, {"name": "神经退行性病变"}, {"name": "糖尿病"}, {"name": "糖尿病肾病"}, {"name": "结直肠癌"}, {"name": "结肠"}, {"name": "结肠炎"}, {"name": "缺氧"}, {"name": "肝再生"}, {"name": "肝癌"}, {"name": "肝硬化"}, {"name": "肝纤维化"}, {"name": "肝脏"}, {"name": "肠道"}, {"name": "肺炎"}, {"name": "肺癌"}, {"name": "肺纤维化"}, {"name": "肺组织"}, {"name": "肾功能不全"}, {"name": "肾损伤"}, {"name": "肾病综合征"}, {"name": "肾细胞癌"}, {"name": "肾结石"}, {"name": "肾脏"}, {"name": "肾衰竭"}, {"name": "胃"}, {"name": "胃溃疡"}, {"name": "胃炎"}, {"name": "胃癌"}, {"name": "胚胎"}, {"name": "胰岛炎"}, {"name": "胰岛细胞瘤"}, {"name": "胰腺"}, {"name": "胰腺炎"}, {"name": "胰腺癌"}, {"name": "脂肪性肝炎"}, {"name": "脂肪肝"}, {"name": "脑炎"}, {"name": "脑组织"}, {"name": "脑缺血"}, {"name": "脑肿瘤"}, {"name": "脾脏"}, {"name": "腺瘤"}, {"name": "膀胱"}, {"name": "膀胱炎"}, {"name": "膀胱癌"}, {"name": "自身免疫病"}, {"name": "色素沉着"}, {"name": "药物性肾损伤"}, {"name": "贫血"}, {"name": "酒精性肝病"}, {"name": "银屑病"}, {"name": "间皮瘤"}, {"name": "阿尔茨海默病"}, {"name": "食管"}, {"name": "食管癌"}, {"name": "骨髓"}, {"name": "高血压"}, {"name": "黑色素瘤"}],
+    links:[{"source": "人类", "target": "脑组织", "value": 4}, {"source": "小鼠", "target": "肝脏", "value": 2}, {"source": "斑马鱼", "target": "心脏", "value": 3}, {"source": "人类", "target": "肺组织", "value": 4}, {"source": "大鼠", "target": "肾脏", "value": 3}, {"source": "人类", "target": "结肠", "value": 4}, {"source": "小鼠", "target": "脾脏", "value": 1}, {"source": "人类", "target": "乳腺", "value": 4}, {"source": "斑马鱼", "target": "胚胎", "value": 1}, {"source": "人类", "target": "皮肤", "value": 3}, {"source": "小鼠", "target": "脑组织", "value": 2}, {"source": "人类", "target": "肝脏", "value": 4}, {"source": "大鼠", "target": "心脏", "value": 2}, {"source": "人类", "target": "肾脏", "value": 3}, {"source": "斑马鱼", "target": "脾脏", "value": 2}, {"source": "人类", "target": "胰腺", "value": 3}, {"source": "小鼠", "target": "肺组织", "value": 2}, {"source": "人类", "target": "卵巢", "value": 3}, {"source": "大鼠", "target": "乳腺", "value": 1}, {"source": "人类", "target": "前列腺", "value": 3}, {"source": "斑马鱼", "target": "脑组织", "value": 1}, {"source": "人类", "target": "胃", "value": 2}, {"source": "小鼠", "target": "肠道", "value": 1}, {"source": "人类", "target": "骨髓", "value": 2}, {"source": "大鼠", "target": "肝脏", "value": 1}, {"source": "人类", "target": "子宫", "value": 2}, {"source": "斑马鱼", "target": "肾脏", "value": 2}, {"source": "人类", "target": "甲状腺", "value": 3}, {"source": "小鼠", "target": "胰腺", "value": 2}, {"source": "人类", "target": "膀胱", "value": 2}, {"source": "大鼠", "target": "肺组织", "value": 1}, {"source": "小鼠", "target": "肾脏", "value": 2}, {"source": "大鼠", "target": "脾脏", "value": 1}, {"source": "斑马鱼", "target": "卵巢", "value": 1}, {"source": "小鼠", "target": "心脏", "value": 1}, {"source": "大鼠", "target": "脑组织", "value": 2}, {"source": "斑马鱼", "target": "肝脏", "value": 2}, {"source": "小鼠", "target": "皮肤", "value": 1}, {"source": "斑马鱼", "target": "肺组织", "value": 1}, {"source": "小鼠", "target": "骨髓", "value": 1}, {"source": "人类", "target": "肠道", "value": 1}, {"source": "大鼠", "target": "皮肤", "value": 1}, {"source": "小鼠", "target": "胃", "value": 1}, {"source": "斑马鱼", "target": "乳腺", "value": 1}, {"source": "大鼠", "target": "胰腺", "value": 1}, {"source": "斑马鱼", "target": "皮肤", "value": 1}, {"source": "大鼠", "target": "结肠", "value": 1}, {"source": "人类", "target": "脾脏", "value": 1}, {"source": "小鼠", "target": "卵巢", "value": 1}, {"source": "人类", "target": "食管", "value": 1}, {"source": "大鼠", "target": "膀胱", "value": 1}, {"source": "人类", "target": "心脏", "value": 1}, {"source": "斑马鱼", "target": "前列腺", "value": 1}, {"source": "大鼠", "target": "卵巢", "value": 1}, {"source": "斑马鱼", "target": "胰腺", "value": 1}, {"source": "脑组织", "target": "阿尔茨海默病", "value": 1}, {"source": "肝脏", "target": "正常", "value": 2}, {"source": "心脏", "target": "心肌病", "value": 1}, {"source": "肺组织", "target": "肺癌", "value": 1}, {"source": "肾脏", "target": "糖尿病肾病", "value": 1}, {"source": "结肠", "target": "结直肠癌", "value": 1}, {"source": "脾脏", "target": "正常", "value": 1}, {"source": "乳腺", "target": "乳腺癌", "value": 1}, {"source": "胚胎", "target": "发育异常", "value": 1}, {"source": "皮肤", "target": "黑色素瘤", "value": 1}, {"source": "脑组织", "target": "正常", "value": 2}, {"source": "肝脏", "target": "肝癌", "value": 1}, {"source": "心脏", "target": "心力衰竭", "value": 1}, {"source": "肾脏", "target": "肾细胞癌", "value": 1}, {"source": "脾脏", "target": "感染", "value": 1}, {"source": "胰腺", "target": "胰腺癌", "value": 1}, {"source": "肺组织", "target": "肺炎", "value": 1}, {"source": "卵巢", "target": "卵巢癌", "value": 1}, {"source": "乳腺", "target": "正常", "value": 2}, {"source": "前列腺", "target": "前列腺癌", "value": 1}, {"source": "脑组织", "target": "神经退行性病变", "value": 1}, {"source": "胃", "target": "胃癌", "value": 1}, {"source": "肠道", "target": "炎症性肠病", "value": 1}, {"source": "骨髓", "target": "白血病", "value": 1}, {"source": "肝脏", "target": "肝纤维化", "value": 1}, {"source": "子宫", "target": "子宫内膜癌", "value": 1}, {"source": "肾脏", "target": "肾损伤", "value": 1}, {"source": "甲状腺", "target": "甲状腺癌", "value": 1}, {"source": "胰腺", "target": "正常", "value": 2}, {"source": "膀胱", "target": "膀胱癌", "value": 1}, {"source": "肺组织", "target": "肺纤维化", "value": 1}, {"source": "皮肤", "target": "银屑病", "value": 1}, {"source": "心脏", "target": "心脏再生", "value": 1}, {"source": "肝脏", "target": "酒精性肝病", "value": 1}, {"source": "肾脏", "target": "肾衰竭", "value": 1}, {"source": "脑组织", "target": "帕金森病", "value": 1}, {"source": "脾脏", "target": "自身免疫病", "value": 1}, {"source": "结肠", "target": "溃疡性结肠炎", "value": 1}, {"source": "卵巢", "target": "卵子发生", "value": 1}, {"source": "肺组织", "target": "慢性阻塞性肺病", "value": 1}, {"source": "心脏", "target": "心肌梗死", "value": 1}, {"source": "乳腺", "target": "乳腺炎", "value": 1}, {"source": "脑组织", "target": "脑缺血", "value": 1}, {"source": "肾脏", "target": "狼疮性肾炎", "value": 1}, {"source": "肝脏", "target": "脂肪肝", "value": 1}, {"source": "胃", "target": "胃炎", "value": 1}, {"source": "皮肤", "target": "伤口愈合", "value": 1}, {"source": "胰腺", "target": "糖尿病", "value": 1}, {"source": "心脏", "target": "高血压", "value": 1}, {"source": "卵巢", "target": "多囊卵巢综合征", "value": 1}, {"source": "肺组织", "target": "缺氧", "value": 1}, {"source": "前列腺", "target": "前列腺炎", "value": 1}, {"source": "骨髓", "target": "贫血", "value": 1}, {"source": "甲状腺", "target": "甲状腺炎", "value": 1}, {"source": "肾脏", "target": "肾病综合征", "value": 1}, {"source": "皮肤", "target": "湿疹", "value": 1}, {"source": "脾脏", "target": "免疫缺陷", "value": 1}, {"source": "肝脏", "target": "肝硬化", "value": 1}, {"source": "胰腺", "target": "胰腺炎", "value": 1}, {"source": "肠道", "target": "克罗恩病", "value": 1}, {"source": "脑组织", "target": "脑肿瘤", "value": 1}, {"source": "心脏", "target": "心律失常", "value": 1}, {"source": "结肠", "target": "正常", "value": 1}, {"source": "肺组织", "target": "哮喘", "value": 1}, {"source": "肾脏", "target": "正常", "value": 1}, {"source": "皮肤", "target": "烧伤", "value": 1}, {"source": "卵巢", "target": "正常", "value": 1}, {"source": "肝脏", "target": "肝再生", "value": 1}, {"source": "前列腺", "target": "正常", "value": 1}, {"source": "胃", "target": "胃溃疡", "value": 1}, {"source": "肾脏", "target": "肾结石", "value": 1}, {"source": "乳腺", "target": "发育", "value": 1}, {"source": "膀胱", "target": "正常", "value": 1}, {"source": "肾脏", "target": "药物性肾损伤", "value": 1}, {"source": "胰腺", "target": "胰岛炎", "value": 1}, {"source": "肺组织", "target": "正常", "value": 1}, {"source": "皮肤", "target": "色素沉着", "value": 1}, {"source": "子宫", "target": "正常", "value": 1}, {"source": "脑组织", "target": "脑炎", "value": 1}, {"source": "甲状腺", "target": "正常", "value": 1}, {"source": "结肠", "target": "结肠炎", "value": 1}, {"source": "脾脏", "target": "淋巴瘤", "value": 1}, {"source": "肾脏", "target": "肾功能不全", "value": 1}, {"source": "骨髓", "target": "正常", "value": 1}, {"source": "卵巢", "target": "卵巢囊肿", "value": 1}, {"source": "食管", "target": "食管癌", "value": 1}, {"source": "膀胱", "target": "膀胱炎", "value": 1}, {"source": "心脏", "target": "心肌炎", "value": 1}, {"source": "前列腺", "target": "前列腺增生", "value": 1}, {"source": "乳腺", "target": "导管原位癌", "value": 1}, {"source": "肝脏", "target": "脂肪性肝炎", "value": 1}, {"source": "肺组织", "target": "间皮瘤", "value": 1}, {"source": "卵巢", "target": "卵巢早衰", "value": 1}, {"source": "结肠", "target": "腺瘤", "value": 1}, {"source": "胰腺", "target": "胰岛细胞瘤", "value": 1}, {"source": "脑组织", "target": "癫痫", "value": 1}]
+  }]
+});
+</script>
+
+</div>
+</body>
+</html>
