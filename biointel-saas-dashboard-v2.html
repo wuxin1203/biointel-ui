@@ -95,11 +95,11 @@ body{
 .add-btn:hover{background:#16C25B;color:#fff}
 .detail-link{font-size:13px;color:#16C25B;font-weight:600;text-decoration:none}
 
-/* ── Right Sidebar - AI 智能工作区（科幻风格）── */
+/* ── Right Sidebar - AI 智能工作区（浅绿科幻风格）── */
 .right-sidebar{
   width:340px;
-  background:linear-gradient(180deg, #0F1419 0%, #1A1F2E 100%);
-  border-left:1px solid rgba(22,194,91,0.2);
+  background:linear-gradient(180deg, #E8F5EE 0%, #E0F0E8 100%);
+  border-left:1px solid rgba(22,194,91,0.3);
   padding:24px 20px;
   overflow-y:auto;
   position:relative;
@@ -108,18 +108,18 @@ body{
   content:'';
   position:absolute;
   top:0;left:0;right:0;bottom:0;
-  background:radial-gradient(circle at 50% 0%, rgba(22,194,91,0.08) 0%, transparent 60%);
+  background:radial-gradient(circle at 50% 0%, rgba(22,194,91,0.12) 0%, transparent 60%);
   pointer-events:none;
 }
 
 .ai-card{
-  background:rgba(255,255,255,0.03);
+  background:rgba(255,255,255,0.85);
   backdrop-filter:blur(10px);
-  border:1px solid rgba(22,194,91,0.2);
+  border:1px solid rgba(22,194,91,0.25);
   border-radius:16px;
   padding:20px;
   margin-bottom:24px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  box-shadow:0 4px 20px rgba(22,194,91,0.15), inset 0 1px 0 rgba(255,255,255,0.8);
   position:relative;
 }
 .ai-card::after{
@@ -127,7 +127,7 @@ body{
   position:absolute;
   top:-1px;left:20px;right:20px;
   height:1px;
-  background:linear-gradient(90deg, transparent, rgba(22,194,91,0.6), transparent);
+  background:linear-gradient(90deg, transparent, rgba(22,194,91,0.5), transparent);
 }
 
 .ai-header{
@@ -160,7 +160,7 @@ body{
 
 .ai-welcome{
   font-size:13px;
-  color:rgba(255,255,255,0.8);
+  color:rgba(0,0,0,0.7);
   line-height:1.6;
   margin-bottom:16px;
 }
@@ -173,11 +173,11 @@ body{
 }
 .ai-suggestion{
   padding:10px 14px;
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(22,194,91,0.3);
+  background:rgba(22,194,91,0.08);
+  border:1px solid rgba(22,194,91,0.25);
   border-radius:8px;
   font-size:12px;
-  color:rgba(255,255,255,0.7);
+  color:rgba(0,0,0,0.75);
   cursor:pointer;
   transition:all .3s ease;
   position:relative;
@@ -194,7 +194,7 @@ body{
 .ai-suggestion:hover{
   border-color:#16C25B;
   color:#16C25B;
-  background:rgba(22,194,91,0.1);
+  background:rgba(22,194,91,0.15);
   box-shadow:0 0 15px rgba(22,194,91,0.3);
   transform:translateX(4px);
 }
@@ -204,20 +204,20 @@ body{
 .ai-input{
   width:100%;
   padding:12px 44px 12px 14px;
-  background:rgba(255,255,255,0.05);
+  background:rgba(255,255,255,0.7);
   border:1px solid rgba(22,194,91,0.3);
   border-radius:8px;
   font-size:13px;
-  color:rgba(255,255,255,0.9);
+  color:rgba(0,0,0,0.85);
   transition:all .3s;
 }
 .ai-input:focus{
   outline:none;
   border-color:#16C25B;
   box-shadow:0 0 15px rgba(22,194,91,0.4);
-  background:rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.9);
 }
-.ai-input::placeholder{color:rgba(255,255,255,0.4)}
+.ai-input::placeholder{color:rgba(0,0,0,0.4)}
 
 .ai-send{
   position:absolute;right:8px;top:50%;transform:translateY(-50%);
@@ -243,12 +243,12 @@ body{
   font-weight:600;
   color:#16C25B;
   margin-bottom:12px;
-  text-shadow:0 0 8px rgba(22,194,91,0.4);
+  text-shadow:0 0 8px rgba(22,194,91,0.3);
 }
 
 .recommend-item{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(22,194,91,0.15);
+  background:rgba(255,255,255,0.5);
+  border:1px solid rgba(22,194,91,0.2);
   border-radius:8px;
   padding:12px;
   margin-bottom:8px;
@@ -282,12 +282,12 @@ body{
 }
 .recommend-name{
   font-size:12px;
-  color:rgba(255,255,255,0.7);
+  color:rgba(0,0,0,0.7);
   line-height:1.4;
 }
 .recommend-time{
   font-size:11px;
-  color:rgba(255,255,255,0.4);
+  color:rgba(0,0,0,0.5);
   margin-top:4px;
 }
 </style>
