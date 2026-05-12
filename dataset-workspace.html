@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioIntelOS - 我的工作台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: #F7F9FC; }
+        .transition-all { transition: all 0.2s ease; }
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease forwards; }
+        .tooltip-container:hover .tooltip-content { display: block; }
+        .tooltip-content { display: none; }
+        ::-webkit-scrollbar { height: 6px; width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        'primary-hover': '#1D4ED8',
+                        danger: '#EF4444',
+                        'bg-main': '#F7F9FC',
+                        'bg-card': '#F8FAFC',
+                        'text-primary': '#111827',
+                        'text-secondary': '#6B7280',
+                        'border-main': '#E5E7EB',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+// ============ MOCK DATA ============
+const mockDatasets = [
+    { id: 'GSE134520', title: 'Liver cancer spatial transcriptome atlas', category: 'GEO', organism: 'Homo sapiens', sampleCount: 72, sizeGB: 12.45, publishDate: '2023-08-15', addedDate: '2024-05-20 14:30', expireDate: '2025-05-20', datatype: 'TRANSCRIPTOMICS (BULK)' },
+    { id: 'TCGA-LIHC', title: 'Liver hepatocellular carcinoma multi-omics', category: 'TCGA', organism: 'Homo sapiens', sampleCount: 567, sizeGB: 45.21, publishDate: '2022-03-10', addedDate: '2024-05-18 09:15', expireDate: '2025-05-18', datatype: 'MUTATION' },
+    { id: 'GSE176078', title: 'Breast invasive carcinoma single-cell RNA-seq', category: 'GEO', organism: 'Homo sapiens', sampleCount: 130, sizeGB: 28.73, publishDate: '2023-11-22', addedDate: '2024-05-15 16:42', expireDate: '2025-05-15', datatype: 'TRANSCRIPTOMICS (BULK)' },
+    { id: 'cBioPortal-LUAD', title: 'Lung adenocarcinoma genomic profiling', category: 'cBioPortal', organism: 'Homo sapiens', sampleCount: 1243, sizeGB: 67.89, publishDate: '2023-06-30', addedDate: '2024-05-12 11:20', expireDate: '2025-05-12', datatype: 'CNV' },
+    { id: 'TCGA-GBM', title: 'Glioblastoma multiforme integrated analysis', category: 'TCGA', organism: 'Homo sapiens', sampleCount: 617, sizeGB: 52.34, publishDate: '2022-09-18', addedDate: '2024-05-10 08:55', expireDate: '2025-05-10', datatype: 'METHYLATION' },
+    { id: 'GSE164191', title: 'Colorectal cancer immune microenvironment atlas', category: 'GEO', organism: 'Homo sapiens', sampleCount: 256, sizeGB: 18.92, publishDate: '2024-01-05', addedDate: '2024-05-08 13:30', expireDate: '2025-05-08', datatype: 'TRANSCRIPTOMICS (BULK)' },
+    { id: 'GTEx-Liver', title: 'GTEx liver tissue gene expression baseline', category: 'GTEx', organism: 'Homo sapiens', sampleCount: 17382, sizeGB: 124.56, publishDate: '2023-04-12', addedDate: '2024-05-05 10:00', expireDate: '2025-05-05', datatype: 'TRANSCRIPTOMICS (BULK)' },
+    { id: 'TCGA-BRCA', title: 'Breast invasive carcinoma (BRCA) cohort', category: 'TCGA', organism: 'Homo sapiens', sampleCount: 1098, sizeGB: 89.12, publishDate: '2022-07-20', addedDate: '2024-04-28 15:45', expireDate: '2025-04-28', datatype: 'MUTATION' },
+    { id: 'cBioPortal-CRC', title: 'Colorectal cancer mutation landscape', category: 'cBioPortal', organism: 'Homo sapiens', sampleCount: 894, sizeGB: 34.67, publishDate: '2023-12-01', addedDate: '2024-04-25 09:30', expireDate: '2025-04-25', datatype: 'MUTATION' },
+    { id: 'GSE185231', title: 'Glioma DNA methylation profiling dataset', category: 'GEO', organism: 'Homo sapiens', sampleCount: 445, sizeGB: 23.89, publishDate: '2024-02-14', addedDate: '2024-04-20 14:10', expireDate: '2025-04-20', datatype: 'METHYLATION' },
+    { id: 'GTEx-Brain', title: 'GTEx brain multi-region transcriptome', category: 'GTEx', organism: 'Homo sapiens', sampleCount: 2642, sizeGB: 78.45, publishDate: '2023-05-28', addedDate: '2024-04-15 11:25', expireDate: '2025-04-15', datatype: 'TRANSCRIPTOMICS (BULK)' },
+    { id: 'TCGA-LUAD', title: 'Lung adenocarcinoma (LUAD) comprehensive', category: 'TCGA', organism: 'Homo sapiens', sampleCount: 585, sizeGB: 41.23, publishDate: '2022-11-08', addedDate: '2024-04-10 16:50', expireDate: '2025-04-10', datatype: 'CNV' },
+];
+
+// ============ COMPONENTS ============
+
+// --- Header ---
+function Header() {
+    const navItems = ['智能助手', '数据集', '我的工作台', '个人设置'];
+    return (
+        <header className="w-full h-[72px] bg-white border-b border-border-main flex items-center px-8 sticky top-0 z-50">
+            <div className="flex items-center gap-2 mr-12">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="#2563EB"/>
+                    <path d="M8 16C8 11.58 11.58 8 16 8C20.42 8 24 11.58 24 16" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                    <circle cx="16" cy="16" r="3" fill="white"/>
+                    <path d="M16 19C16 21.76 18.24 24 21 24" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                    <circle cx="10" cy="22" r="2" fill="white" opacity="0.6"/>
+                </svg>
+                <span className="text-lg font-bold text-text-primary tracking-tight">BioIntelOS</span>
+            </div>
+            <nav className="flex items-center gap-8 flex-1">
+                {navItems.map(item => (
+                    <a key={item} href="#" className={`relative text-sm py-1 transition-all ${item === '我的工作台' ? 'text-primary font-semibold' : 'text-text-secondary hover:text-text-primary'}`}>
+                        {item}
+                        {item === '我的工作台' && <span className="absolute bottom-[-24px] left-0 right-0 h-[2px] bg-primary rounded-full"></span>}
+                    </a>
+                ))}
+            </nav>
+            <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-medium">JY</div>
+                <span className="text-sm text-text-secondary">jyxiao</span>
+            </div>
+        </header>
+    );
+}
+
+// --- WorkspaceBanner ---
+function WorkspaceBanner({ visible, onClose }) {
+    if (!visible) return null;
+    return (
+        <div className="fade-in bg-[#EFF6FF] border border-[#DBEAFE] rounded-[14px] p-[18px_24px] flex items-start gap-3 mb-6">
+            <svg className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+            </svg>
+            <div className="flex-1 text-sm text-text-secondary leading-relaxed">
+                <p>以下是您已添加到项目目录中的数据集，您可以管理或移除不需要的数据集。</p>
+                <p className="mt-1">添加到工作台的数据集仅收取数值占用服务器的数据存储和传输费用，不收取任何数据使用费用。</p>
+            </div>
+            <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-md text-text-secondary hover:bg-gray-200 hover:text-text-primary transition-all flex-shrink-0">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    );
+}
+
+// --- WorkspaceSearch ---
+function WorkspaceSearch({ searchTerm, onSearch }) {
+    return (
+        <div className="flex gap-3 mb-6">
+            <div className="flex-1 relative">
+                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={e => onSearch(e.target.value)}
+                    placeholder="搜索已添加的数据集名称、ID 或关键词..."
+                    className="w-full h-[52px] pl-12 pr-4 bg-white border border-border-main rounded-xl text-sm text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+            </div>
+            <button className="h-[52px] px-6 bg-primary hover:bg-primary-hover text-white rounded-xl text-sm font-medium flex items-center gap-2 transition-all">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                搜索
+            </button>
+        </div>
+    );
+}
+
+// --- SortDropdown ---
+function SortDropdown({ value, onChange }) {
+    const options = ['添加时间（最新）', '添加时间（最早）', '发布时间', '样本量', '数据大小'];
+    const [open, setOpen] = React.useState(false);
+    return (
+        <div className="relative">
+            <button onClick={() => setOpen(!open)} className="h-9 px-4 bg-white border border-border-main rounded-lg text-sm text-text-secondary flex items-center gap-2 hover:bg-gray-50 transition-all">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
+                {value}
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            {open && (
+                <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-border-main rounded-xl shadow-lg py-1 z-30 fade-in">
+                    {options.map(opt => (
+                        <button key={opt} onClick={() => { onChange(opt); setOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition-all ${opt === value ? 'text-primary font-medium' : 'text-text-secondary'}`}>{opt}</button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// --- Toolbar ---
+function Toolbar({ total, sortValue, onSortChange, viewMode, onViewChange }) {
+    return (
+        <div className="flex items-center justify-between mb-4">
+            <span className="text-sm text-text-secondary">共 <span className="font-semibold text-text-primary">{total}</span> 个数据集</span>
+            <div className="flex items-center gap-3">
+                <SortDropdown value={sortValue} onChange={onSortChange} />
+                <div className="flex border border-border-main rounded-lg overflow-hidden">
+                    <button onClick={() => onViewChange('grid')} className={`h-9 px-3 flex items-center gap-1.5 text-sm transition-all ${viewMode === 'grid' ? 'bg-blue-50 text-primary' : 'bg-white text-text-secondary hover:bg-gray-50'}`}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        Grid
+                    </button>
+                    <button onClick={() => onViewChange('table')} className={`h-9 px-3 flex items-center gap-1.5 text-sm border-l border-border-main transition-all ${viewMode === 'table' ? 'bg-blue-50 text-primary' : 'bg-white text-text-secondary hover:bg-gray-50'}`}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                        Table
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// --- DatasetRow ---
+function DatasetRow({ dataset, onRemove }) {
+    const datatypeColors = {
+        'TRANSCRIPTOMICS (BULK)': 'border-blue-300 text-blue-600 bg-blue-50',
+        'MUTATION': 'border-purple-300 text-purple-600 bg-purple-50',
+        'CNV': 'border-emerald-300 text-emerald-600 bg-emerald-50',
+        'METHYLATION': 'border-amber-300 text-amber-600 bg-amber-50',
+    };
+    return (
+        <tr className="h-[72px] border-b border-gray-100 hover:bg-blue-50/40 cursor-pointer transition-all group">
+            <td className="w-10 pl-4">
+                <svg className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-all cursor-grab" viewBox="0 0 16 16" fill="currentColor">
+                    <circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/>
+                    <circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/>
+                    <circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/>
+                </svg>
+            </td>
+            <td className="py-3 pr-4 min-w-[280px]">
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[16px] font-bold text-primary">{dataset.id}</span>
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full border font-medium ${datatypeColors[dataset.datatype] || 'border-gray-300 text-gray-600 bg-gray-50'}`}>{dataset.datatype}</span>
+                    </div>
+                    <span className="text-[14px] text-text-secondary">{dataset.title}</span>
+                </div>
+            </td>
+            <td className="px-4 text-sm text-text-secondary whitespace-nowrap">
+                <span className="px-2 py-1 bg-gray-100 rounded-md text-xs font-medium text-text-primary">{dataset.category}</span>
+            </td>
+            <td className="px-4 text-sm text-text-secondary whitespace-nowrap italic">{dataset.organism}</td>
+            <td className="px-4 text-sm text-text-primary text-right font-medium whitespace-nowrap">{dataset.sampleCount.toLocaleString()}</td>
+            <td className="px-4 text-sm text-text-primary text-right whitespace-nowrap">{dataset.sizeGB.toFixed(2)} GB</td>
+            <td className="px-4 text-sm text-text-secondary whitespace-nowrap">{dataset.publishDate}</td>
+            <td className="px-4 text-sm text-text-secondary whitespace-nowrap">{dataset.addedDate}</td>
+            <td className="px-4 text-sm text-text-secondary whitespace-nowrap">
+                <div className="flex items-center gap-1 tooltip-container relative">
+                    {dataset.expireDate}
+                    <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div className="tooltip-content absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap z-50">数据缓存有效期<div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div></div>
+                </div>
+            </td>
+            <td className="px-4 pr-6">
+                <button onClick={(e) => { e.stopPropagation(); onRemove(dataset.id); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger border border-red-200 rounded-lg hover:bg-red-50 transition-all">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    移除
+                </button>
+            </td>
+        </tr>
+    );
+}
+
+// --- DatasetCard (mobile) ---
+function DatasetCard({ dataset, onRemove }) {
+    const datatypeColors = {
+        'TRANSCRIPTOMICS (BULK)': 'border-blue-300 text-blue-600 bg-blue-50',
+        'MUTATION': 'border-purple-300 text-purple-600 bg-purple-50',
+        'CNV': 'border-emerald-300 text-emerald-600 bg-emerald-50',
+        'METHYLATION': 'border-amber-300 text-amber-600 bg-amber-50',
+    };
+    return (
+        <div className="bg-white rounded-2xl border border-border-main p-5 hover:shadow-md transition-all fade-in">
+            <div className="flex items-start justify-between mb-3">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[16px] font-bold text-primary">{dataset.id}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${datatypeColors[dataset.datatype] || 'border-gray-300 text-gray-600 bg-gray-50'}`}>{dataset.datatype}</span>
+                    </div>
+                    <p className="text-sm text-text-secondary">{dataset.title}</p>
+                </div>
+                <span className="px-2 py-1 bg-gray-100 rounded-md text-xs font-medium text-text-primary">{dataset.category}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs text-text-secondary mb-3">
+                <div>物种: <span className="text-text-primary italic">{dataset.organism}</span></div>
+                <div>样本量: <span className="text-text-primary font-medium">{dataset.sampleCount.toLocaleString()}</span></div>
+                <div>大小: <span className="text-text-primary">{dataset.sizeGB.toFixed(2)} GB</span></div>
+                <div>发布: <span className="text-text-primary">{dataset.publishDate}</span></div>
+                <div>添加: <span className="text-text-primary">{dataset.addedDate}</span></div>
+                <div>到期: <span className="text-text-primary">{dataset.expireDate}</span></div>
+            </div>
+            <button onClick={() => onRemove(dataset.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger border border-red-200 rounded-lg hover:bg-red-50 transition-all">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                移除
+            </button>
+        </div>
+    );
+}
+
+// --- Skeleton Loading ---
+function SkeletonRow() {
+    return (
+        <tr className="h-[72px] border-b border-gray-100">
+            <td className="pl-4"><div className="w-4 h-4 skeleton rounded"></div></td>
+            <td className="py-3 pr-4"><div className="flex flex-col gap-2"><div className="w-32 h-4 skeleton rounded"></div><div className="w-48 h-3 skeleton rounded"></div></div></td>
+            <td className="px-4"><div className="w-12 h-5 skeleton rounded"></div></td>
+            <td className="px-4"><div className="w-20 h-4 skeleton rounded"></div></td>
+            <td className="px-4"><div className="w-12 h-4 skeleton rounded ml-auto"></div></td>
+            <td className="px-4"><div className="w-16 h-4 skeleton rounded ml-auto"></div></td>
+            <td className="px-4"><div className="w-20 h-4 skeleton rounded"></div></td>
+            <td className="px-4"><div className="w-28 h-4 skeleton rounded"></div></td>
+            <td className="px-4"><div className="w-20 h-4 skeleton rounded"></div></td>
+            <td className="px-4"><div className="w-14 h-6 skeleton rounded"></div></td>
+        </tr>
+    );
+}
+
+// --- Pagination ---
+function Pagination({ currentPage, totalPages, pageSize, onPageChange, onPageSizeChange }) {
+    const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+    return (
+        <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
+            <div className="flex items-center gap-2">
+                <span className="text-sm text-text-secondary">每页</span>
+                <select value={pageSize} onChange={e => onPageSizeChange(Number(e.target.value))} className="h-8 px-2 border border-border-main rounded-lg text-sm text-text-secondary bg-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    <option value={10}>10 条/页</option>
+                    <option value={20}>20 条/页</option>
+                    <option value={50}>50 条/页</option>
+                </select>
+            </div>
+            <div className="flex items-center gap-1">
+                <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="h-8 px-3 text-sm text-text-secondary border border-border-main rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">上一页</button>
+                {pages.map(p => (
+                    <button key={p} onClick={() => onPageChange(p)} className={`w-8 h-8 text-sm rounded-lg transition-all ${p === currentPage ? 'bg-primary text-white font-medium' : 'text-text-secondary hover:bg-gray-100'}`}>{p}</button>
+                ))}
+                <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="h-8 px-3 text-sm text-text-secondary border border-border-main rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">下一页</button>
+            </div>
+        </div>
+    );
+}
+
+// --- Confirm Modal ---
+function ConfirmModal({ visible, datasetId, onConfirm, onCancel }) {
+    if (!visible) return null;
+    return (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] fade-in" onClick={onCancel}>
+            <div className="bg-white rounded-2xl p-6 w-[400px] shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    </div>
+                    <div>
+                        <h3 className="text-base font-semibold text-text-primary">确认移除数据集</h3>
+                        <p className="text-sm text-text-secondary">此操作将从工作台移除 <span className="font-medium text-primary">{datasetId}</span></p>
+                    </div>
+                </div>
+                <p className="text-sm text-text-secondary mb-6">移除后数据集将不再占用存储空间，您可以随时重新添加。</p>
+                <div className="flex justify-end gap-3">
+                    <button onClick={onCancel} className="h-9 px-4 text-sm text-text-secondary border border-border-main rounded-xl hover:bg-gray-50 transition-all">取消</button>
+                    <button onClick={onConfirm} className="h-9 px-4 text-sm text-white bg-danger rounded-xl hover:bg-red-600 transition-all font-medium">确认移除</button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// --- Empty State ---
+function EmptyState() {
+    return (
+        <div className="flex flex-col items-center justify-center py-20">
+            <svg className="w-24 h-24 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+            <h3 className="text-lg font-medium text-text-primary mb-2">暂无数据集</h3>
+            <p className="text-sm text-text-secondary mb-4">您还没有添加任何数据集到工作台</p>
+            <button className="h-10 px-5 bg-primary hover:bg-primary-hover text-white rounded-xl text-sm font-medium transition-all">浏览数据集</button>
+        </div>
+    );
+}
+
+// ============ MAIN APP ============
+function App() {
+    const [bannerVisible, setBannerVisible] = React.useState(true);
+    const [searchTerm, setSearchTerm] = React.useState('');
+    const [sortValue, setSortValue] = React.useState('添加时间（最新）');
+    const [viewMode, setViewMode] = React.useState('table');
+    const [currentPage, setCurrentPage] = React.useState(1);
+    const [pageSize, setPageSize] = React.useState(10);
+    const [datasets, setDatasets] = React.useState(mockDatasets);
+    const [loading, setLoading] = React.useState(true);
+    const [removeTarget, setRemoveTarget] = React.useState(null);
+
+    React.useEffect(() => { setTimeout(() => setLoading(false), 1200); }, []);
+
+    const filtered = datasets.filter(d =>
+        d.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const sorted = [...filtered].sort((a, b) => {
+        switch (sortValue) {
+            case '添加时间（最新）': return new Date(b.addedDate) - new Date(a.addedDate);
+            case '添加时间（最早）': return new Date(a.addedDate) - new Date(b.addedDate);
+            case '发布时间': return new Date(b.publishDate) - new Date(a.publishDate);
+            case '样本量': return b.sampleCount - a.sampleCount;
+            case '数据大小': return b.sizeGB - a.sizeGB;
+            default: return 0;
+        }
+    });
+
+    const totalPages = Math.ceil(sorted.length / pageSize);
+    const paged = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    const handleRemove = (id) => setRemoveTarget(id);
+    const confirmRemove = () => { setDatasets(datasets.filter(d => d.id !== removeTarget)); setRemoveTarget(null); };
+
+    return (
+        <div className="min-h-screen bg-[#F7F9FC]">
+            <Header />
+            <main className="px-8 py-8 max-w-[1600px] mx-auto">
+                <h1 className="text-[36px] font-bold text-[#1E293B] mb-6">我的工作台</h1>
+                <WorkspaceBanner visible={bannerVisible} onClose={() => setBannerVisible(false)} />
+                <WorkspaceSearch searchTerm={searchTerm} onSearch={setSearchTerm} />
+                <Toolbar total={filtered.length} sortValue={sortValue} onSortChange={setSortValue} viewMode={viewMode} onViewChange={setViewMode} />
+
+                {loading ? (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <table className="w-full"><tbody>{Array.from({length: 5}).map((_, i) => <SkeletonRow key={i} />)}</tbody></table>
+                    </div>
+                ) : paged.length === 0 ? (
+                    <EmptyState />
+                ) : viewMode === 'table' ? (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[1200px]">
+                                <thead>
+                                    <tr className="bg-[#F8FAFC] border-b border-gray-100">
+                                        <th className="w-10 pl-4"></th>
+                                        <th className="text-left py-3 pr-4 text-[13px] font-medium text-text-secondary">数据集信息</th>
+                                        <th className="text-left px-4 text-[13px] font-medium text-text-secondary">类型</th>
+                                        <th className="text-left px-4 text-[13px] font-medium text-text-secondary">物种</th>
+                                        <th className="text-right px-4 text-[13px] font-medium text-text-secondary">样本量</th>
+                                        <th className="text-right px-4 text-[13px] font-medium text-text-secondary">数据大小</th>
+                                        <th className="text-left px-4 text-[13px] font-medium text-text-secondary">发布时间</th>
+                                        <th className="text-left px-4 text-[13px] font-medium text-text-secondary">添加时间</th>
+                                        <th className="text-left px-4 text-[13px] font-medium text-text-secondary">到期时间</th>
+                                        <th className="px-4 pr-6 text-[13px] font-medium text-text-secondary">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paged.map(d => <DatasetRow key={d.id} dataset={d} onRemove={handleRemove} />)}
+                                </tbody>
+                            </table>
+                        </div>
+                        <Pagination currentPage={currentPage} totalPages={totalPages || 1} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={(s) => { setPageSize(s); setCurrentPage(1); }} />
+                    </div>
+                ) : (
+                    <div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {paged.map(d => <DatasetCard key={d.id} dataset={d} onRemove={handleRemove} />)}
+                        </div>
+                        <Pagination currentPage={currentPage} totalPages={totalPages || 1} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={(s) => { setPageSize(s); setCurrentPage(1); }} />
+                    </div>
+                )}
+            </main>
+            <ConfirmModal visible={!!removeTarget} datasetId={removeTarget} onConfirm={confirmRemove} onCancel={() => setRemoveTarget(null)} />
+        </div>
+    );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
