@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioIntelOS - Bioinformatics Dataset Search Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        'primary-light': '#3B82F6',
+                        'primary-bg': '#EFF6FF',
+                        'page-bg': '#F7F9FC',
+                        'border-light': '#EEF2F7',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'SF Pro Display', 'PingFang SC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Inter', 'SF Pro Display', 'PingFang SC', sans-serif; }
+        .card-hover { transition: all 200ms ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(37,99,235,0.12); }
+        .glow-input:focus { box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+        .ai-glow { box-shadow: 0 0 20px rgba(37,99,235,0.08); }
+        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 4px; }
+        .btn-gradient { background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%); }
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        .ai-float { animation: float 3s ease-in-out infinite; }
+        @keyframes typing { from { width: 0; } to { width: 100%; } }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 15px rgba(37,99,235,0.1); } 50% { box-shadow: 0 0 25px rgba(37,99,235,0.2); } }
+        .ai-pulse { animation: pulse-glow 2.5s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-page-bg min-h-screen">
+    <div id="root"></div>
+    <script type="text/babel">
+// ============ MOCK DATA ============
+const mockDatasets = [
+    { id: 'GSE100026', title: 'Transcriptomic profiling of hepatocellular carcinoma reveals molecular subtypes', organism: 'Homo sapiens', sampleCount: 63, platform: 'Illumina HiSeq 2000', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'Liver Cancer', description: 'Comprehensive transcriptomic analysis of HCC samples' },
+    { id: 'GSE134520', title: 'Single-cell RNA sequencing of liver cancer spatial transcriptome atlas', organism: 'Homo sapiens', sampleCount: 72, platform: 'Illumina NovaSeq 6000', datatype: 'TRANSCRIPTOMICS (SC)', disease: 'Liver Cancer', description: 'Spatial transcriptomics of liver tumors' },
+    { id: 'GSE176078', title: 'Breast invasive carcinoma multi-omics integration study', organism: 'Homo sapiens', sampleCount: 130, platform: '10x Genomics Chromium', datatype: 'TRANSCRIPTOMICS (SC)', disease: 'Breast Cancer', description: 'Single-cell atlas of breast cancer microenvironment' },
+    { id: 'GSE150115', title: 'Glioblastoma multiforme immune microenvironment characterization', organism: 'Homo sapiens', sampleCount: 89, platform: 'Illumina HiSeq 4000', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'GBM', description: 'Immune landscape of GBM tumors' },
+    { id: 'GSE164191', title: 'Colorectal cancer immune cell infiltration and gene expression', organism: 'Homo sapiens', sampleCount: 256, platform: 'Illumina NovaSeq 6000', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'Colorectal Cancer', description: 'CRC immune microenvironment profiling' },
+    { id: 'GSE185231', title: 'Lung adenocarcinoma driver mutation landscape and expression', organism: 'Homo sapiens', sampleCount: 445, platform: 'Illumina HiSeq 2500', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'LUAD', description: 'Genomic and transcriptomic analysis of LUAD' },
+    { id: 'GSE144735', title: 'Single-cell transcriptomics of colorectal cancer organoids', organism: 'Homo sapiens', sampleCount: 38, platform: '10x Genomics Chromium', datatype: 'TRANSCRIPTOMICS (SC)', disease: 'Colorectal Cancer', description: 'Organoid-derived single-cell atlas' },
+    { id: 'GSE18224', title: 'Pancreatic ductal adenocarcinoma expression profiling', organism: 'Homo sapiens', sampleCount: 96, platform: 'Affymetrix HG-U133A', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'Pancreatic Cancer', description: 'PDAC molecular subtyping study' },
+    { id: 'GSE202695', title: 'Melanoma immunotherapy response prediction biomarkers', organism: 'Homo sapiens', sampleCount: 178, platform: 'Illumina NovaSeq 6000', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'Melanoma', description: 'Biomarker discovery for ICB response' },
+    { id: 'GSE156625', title: 'Ovarian cancer platinum resistance transcriptomic signatures', organism: 'Homo sapiens', sampleCount: 112, platform: 'Illumina HiSeq 4000', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'Ovarian Cancer', description: 'Drug resistance mechanisms in OC' },
+    { id: 'GSE171306', title: 'Prostate cancer androgen receptor signaling atlas', organism: 'Homo sapiens', sampleCount: 204, platform: 'Illumina NovaSeq 6000', datatype: 'EPIGENOMICS', disease: 'Prostate Cancer', description: 'AR signaling and epigenomic regulation' },
+    { id: 'GSE139555', title: 'Renal cell carcinoma tumor-infiltrating lymphocyte profiling', organism: 'Homo sapiens', sampleCount: 67, platform: '10x Genomics Chromium', datatype: 'TRANSCRIPTOMICS (SC)', disease: 'Renal Cancer', description: 'TIL characterization in RCC' },
+    { id: 'GSE188236', title: 'Gastric cancer molecular classification and prognosis', organism: 'Homo sapiens', sampleCount: 321, platform: 'Illumina HiSeq 2500', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'Gastric Cancer', description: 'Molecular subtypes of gastric adenocarcinoma' },
+    { id: 'GSE162708', title: 'Thyroid carcinoma differentiation state transcriptomics', organism: 'Homo sapiens', sampleCount: 85, platform: 'Illumina NovaSeq 6000', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'Thyroid Cancer', description: 'Dedifferentiation in thyroid cancer' },
+    { id: 'GSE145926', title: 'Non-small cell lung cancer spatial proteomics', organism: 'Homo sapiens', sampleCount: 156, platform: 'CODEX', datatype: 'PROTEOMICS', disease: 'NSCLC', description: 'Spatial protein expression in NSCLC' },
+    { id: 'GSE178360', title: 'Bladder cancer urothelial carcinoma expression atlas', organism: 'Homo sapiens', sampleCount: 243, platform: 'Illumina HiSeq 4000', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'Bladder Cancer', description: 'MIBC and NMIBC transcriptomic comparison' },
+    { id: 'GSE191089', title: 'Esophageal squamous cell carcinoma multi-region sequencing', organism: 'Homo sapiens', sampleCount: 94, platform: 'Illumina NovaSeq 6000', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'Esophageal Cancer', description: 'Intratumor heterogeneity in ESCC' },
+    { id: 'GSE167998', title: 'Acute myeloid leukemia stem cell hierarchy mapping', organism: 'Homo sapiens', sampleCount: 52, platform: '10x Genomics Chromium', datatype: 'TRANSCRIPTOMICS (SC)', disease: 'AML', description: 'LSC hierarchy and differentiation' },
+    { id: 'GSE155698', title: 'Head and neck squamous cell carcinoma HPV+ vs HPV- comparison', organism: 'Homo sapiens', sampleCount: 187, platform: 'Illumina HiSeq 2500', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'HNSCC', description: 'HPV status impact on HNSCC biology' },
+    { id: 'GSE183947', title: 'Cholangiocarcinoma biliary tract cancer genomic landscape', organism: 'Homo sapiens', sampleCount: 73, platform: 'Illumina NovaSeq 6000', datatype: 'TRANSCRIPTOMICS (BULK)', disease: 'Cholangiocarcinoma', description: 'Genomic alterations in biliary cancers' },
+];
+
+const recommendedDatasets = [
+    { id: 'GSE134520', desc: '肝癌空间转录组图谱' },
+    { id: 'GSE150115', desc: 'GBM 免疫微环境特征' },
+    { id: 'GSE18224', desc: '胰腺癌表达谱分析' },
+    { id: 'GSE144735', desc: '结直肠癌类器官单细胞' },
+];
+
+const recentHistory = [
+    { id: 'GSE100026', title: '肝癌转录组分子分型', time: '今天' },
+    { id: 'GSE176078', title: '乳腺癌多组学整合', time: '昨天' },
+    { id: 'GSE164191', title: '结直肠癌免疫浸润', time: '2天前' },
+];
+
+// ============ COMPONENTS ============
+
+// --- Header ---
+function Header() {
+    return (
+        <header className="h-[72px] bg-white border-b border-border-light fixed top-0 left-0 right-0 z-50 shadow-sm">
+            <div className="h-full flex items-center justify-between px-8">
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg btn-gradient flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                        </svg>
+                    </div>
+                    <span className="text-xl font-bold text-gray-900">BioIntelOS</span>
+                </div>
+                <nav className="flex items-center gap-8">
+                    <a href="#" className="text-sm text-gray-500 hover:text-primary transition-colors">智能助手</a>
+                    <a href="#" className="text-sm text-primary font-semibold border-b-2 border-primary pb-1">数据集</a>
+                    <a href="#" className="text-sm text-gray-500 hover:text-primary transition-colors">我的工作台</a>
+                    <a href="#" className="text-sm text-gray-500 hover:text-primary transition-colors">个人设置</a>
+                </nav>
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-medium">JY</div>
+                    <span className="text-sm text-gray-700 font-medium">jyxiao</span>
+                </div>
+            </div>
+        </header>
+    );
+}
+
+// --- SidebarFilters ---
+function SidebarFilters({ filters, onFilterChange, mobileOpen, onMobileClose }) {
+    const sidebarContent = (
+        <div className="space-y-6">
+            <h3 className="text-sm font-semibold text-gray-900">筛选条件</h3>
+            {/* Dataset Type */}
+            <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">数据集类型</h4>
+                {[{name:'GEO',count:'8,245'},{name:'TCGA',count:'2,156'},{name:'cBioPortal',count:'1,023'}].map(item => (
+                    <label key={item.name} className="flex items-center justify-between py-2 cursor-pointer group">
+                        <div className="flex items-center gap-2">
+                            <input type="checkbox" checked={filters.types.includes(item.name)} onChange={() => onFilterChange('types', item.name)} className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"/>
+                            <span className="text-sm text-gray-700 group-hover:text-primary transition-colors">{item.name}</span>
+                        </div>
+                        <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">{item.count}</span>
+                    </label>
+                ))}
+            </div>
+            {/* Organism */}
+            <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">物种 (Organism)</h4>
+                <input type="text" placeholder="搜索物种" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg mb-2 glow-input focus:outline-none focus:border-primary transition-all"/>
+                {['Homo sapiens','Mus musculus','Rattus norvegicus'].map(org => (
+                    <label key={org} className="flex items-center gap-2 py-1.5 cursor-pointer group">
+                        <input type="checkbox" defaultChecked={org==='Homo sapiens'} className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"/>
+                        <span className="text-sm text-gray-700 group-hover:text-primary transition-colors">{org}</span>
+                    </label>
+                ))}
+                <button className="text-xs text-primary hover:underline mt-1">展开更多 ↓</button>
+            </div>
+            {/* Data Type */}
+            <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">数据类型</h4>
+                {['Transcriptomics','Epigenomics','Proteomics','Metagenomics'].map(dt => (
+                    <label key={dt} className="flex items-center gap-2 py-1.5 cursor-pointer group">
+                        <input type="checkbox" defaultChecked={dt==='Transcriptomics'} className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"/>
+                        <span className="text-sm text-gray-700 group-hover:text-primary transition-colors">{dt}</span>
+                    </label>
+                ))}
+            </div>
+            {/* Research Area */}
+            <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">研究领域</h4>
+                {['Cancer','Immunology','Neurology','Cardiovascular'].map(area => (
+                    <label key={area} className="flex items-center gap-2 py-1.5 cursor-pointer group">
+                        <input type="checkbox" defaultChecked={area==='Cancer'} className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"/>
+                        <span className="text-sm text-gray-700 group-hover:text-primary transition-colors">{area}</span>
+                    </label>
+                ))}
+            </div>
+            {/* Date Range */}
+            <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">发布时间</h4>
+                <div className="flex gap-2">
+                    <input type="date" className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg glow-input focus:outline-none focus:border-primary"/>
+                    <input type="date" className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg glow-input focus:outline-none focus:border-primary"/>
+                </div>
+            </div>
+            {/* Sample Size */}
+            <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">样本量</h4>
+                <input type="range" min="1" max="10000" defaultValue="5000" className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"/>
+                <div className="flex justify-between text-xs text-gray-400 mt-1"><span>1</span><span>10,000+</span></div>
+            </div>
+            {/* Status */}
+            <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">数据状态</h4>
+                <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg glow-input focus:outline-none focus:border-primary bg-white">
+                    <option>全部状态</option><option>已发布</option><option>预发布</option><option>已归档</option>
+                </select>
+            </div>
+        </div>
+    );
+
+    return (
+        <>
+            {/* Desktop */}
+            <aside className="hidden lg:block w-[280px] bg-white rounded-2xl p-6 h-[calc(100vh-104px)] overflow-y-auto sidebar-scroll sticky top-[88px] shadow-sm border border-border-light flex-shrink-0">
+                {sidebarContent}
+            </aside>
+            {/* Mobile Drawer */}
+            {mobileOpen && (
+                <div className="lg:hidden fixed inset-0 z-[60] flex">
+                    <div className="absolute inset-0 bg-black/30" onClick={onMobileClose}></div>
+                    <div className="relative w-[300px] bg-white h-full overflow-y-auto p-6 shadow-xl fade-in">
+                        <button onClick={onMobileClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                        {sidebarContent}
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+// --- SearchBar ---
+function SearchBar({ searchTerm, onSearch }) {
+    return (
+        <div className="mb-4">
+            <div className="flex gap-3">
+                <div className="flex-1 relative">
+                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" value={searchTerm} onChange={e => onSearch(e.target.value)} placeholder="输入关键词搜索数据集，如：liver cancer, single-cell RNA-seq..." className="w-full h-[56px] pl-12 pr-4 bg-white border border-gray-200 rounded-[14px] text-sm text-gray-900 placeholder:text-gray-400 glow-input focus:outline-none focus:border-primary transition-all"/>
+                </div>
+                <button className="h-[56px] px-6 btn-gradient text-white rounded-[14px] text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-all shadow-md">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    搜索
+                </button>
+            </div>
+            {/* Example Tags */}
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+                <span className="text-xs text-gray-400">试试：</span>
+                {['GSE100026','RNA-seq','Homo sapiens','liver cancer'].map(tag => (
+                    <button key={tag} onClick={() => onSearch(tag)} className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-primary-bg hover:text-primary transition-all">{tag}</button>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// --- ActiveFilters ---
+function ActiveFilters({ filters, onRemove, onClear }) {
+    const tags = [...filters.types, 'Homo sapiens', 'Transcriptomics', 'Cancer'];
+    return (
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <span className="text-xs text-gray-500 font-medium">已选条件：</span>
+            {tags.map(tag => (
+                <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-primary-bg text-primary rounded-full font-medium">
+                    {tag}
+                    <button onClick={() => onRemove(tag)} className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-primary/20 transition-all">
+                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </span>
+            ))}
+            <button onClick={onClear} className="text-xs text-gray-400 hover:text-red-500 transition-colors ml-1">清空全部</button>
+        </div>
+    );
+}
+
+// --- DatasetCard ---
+function DatasetCard({ dataset, onAddToWorkspace }) {
+    const typeColors = {
+        'TRANSCRIPTOMICS (BULK)': 'bg-blue-50 text-blue-600 border-blue-200',
+        'TRANSCRIPTOMICS (SC)': 'bg-purple-50 text-purple-600 border-purple-200',
+        'EPIGENOMICS': 'bg-amber-50 text-amber-600 border-amber-200',
+        'PROTEOMICS': 'bg-emerald-50 text-emerald-600 border-emerald-200',
+    };
+    return (
+        <div className="bg-white rounded-[18px] border border-border-light p-5 card-hover cursor-pointer">
+            <div className="flex items-start justify-between mb-3">
+                <span className="text-sm font-bold text-primary">{dataset.id}</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${typeColors[dataset.datatype] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>{dataset.datatype}</span>
+            </div>
+            <h3 className="text-[15px] font-medium text-gray-900 leading-snug mb-3 line-clamp-2" style={{display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{dataset.title}</h3>
+            <div className="space-y-1.5 mb-4">
+                <div className="flex items-center text-xs"><span className="text-gray-400 w-14">物种</span><span className="text-gray-700 italic">{dataset.organism}</span></div>
+                <div className="flex items-center text-xs"><span className="text-gray-400 w-14">样本量</span><span className="text-gray-700 font-medium">{dataset.sampleCount}</span></div>
+                <div className="flex items-center text-xs"><span className="text-gray-400 w-14">平台</span><span className="text-gray-700">{dataset.platform}</span></div>
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                <button onClick={() => onAddToWorkspace(dataset.id)} className="text-xs px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary-bg transition-all font-medium">+ 添加到工作台</button>
+                <button className="text-xs text-gray-500 hover:text-primary transition-colors font-medium">查看详情 →</button>
+            </div>
+        </div>
+    );
+}
+
+// --- SkeletonCard ---
+function SkeletonCard() {
+    return (
+        <div className="bg-white rounded-[18px] border border-border-light p-5">
+            <div className="flex justify-between mb-3"><div className="w-20 h-4 skeleton rounded"></div><div className="w-28 h-4 skeleton rounded-full"></div></div>
+            <div className="w-full h-4 skeleton rounded mb-2"></div>
+            <div className="w-3/4 h-4 skeleton rounded mb-4"></div>
+            <div className="space-y-2 mb-4"><div className="w-32 h-3 skeleton rounded"></div><div className="w-24 h-3 skeleton rounded"></div><div className="w-40 h-3 skeleton rounded"></div></div>
+            <div className="flex justify-between pt-3 border-t border-gray-100"><div className="w-24 h-7 skeleton rounded-lg"></div><div className="w-16 h-4 skeleton rounded"></div></div>
+        </div>
+    );
+}
+
+// --- AIAssistantPanel ---
+function AIAssistantPanel({ aiOpen, onToggle }) {
+    const [aiInput, setAiInput] = React.useState('');
+    const panelContent = (
+        <div className="space-y-5">
+            {/* AI Search Assistant */}
+            <div className="bg-white rounded-2xl p-5 border border-border-light ai-glow">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="w-7 h-7 rounded-lg bg-primary-bg flex items-center justify-center ai-float">
+                        <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <h3 className="text-sm font-semibold text-gray-900">AI 检索</h3>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                    <p className="text-sm text-gray-700 font-medium mb-1">Hi! 我是 BioIntelOS AI 助手</p>
+                    <p className="text-xs text-gray-500">我可以帮你搜索数据、解读结果、推荐相关数据集</p>
+                </div>
+                <div className="space-y-2 mb-4">
+                    {['寻找肝癌的单细胞转录组数据集','推荐乳腺癌的表达谱数据集','比较不同平台的肝癌数据集差异'].map(q => (
+                        <button key={q} className="w-full text-left px-3 py-2 text-xs text-gray-600 bg-gray-50 rounded-lg hover:bg-primary-bg hover:text-primary transition-all">{q}</button>
+                    ))}
+                </div>
+                <div className="flex gap-2">
+                    <input type="text" value={aiInput} onChange={e => setAiInput(e.target.value)} placeholder="输入你的问题..." className="flex-1 h-9 px-3 text-xs border border-gray-200 rounded-lg glow-input focus:outline-none focus:border-primary transition-all"/>
+                    <button className="h-9 w-9 btn-gradient rounded-lg flex items-center justify-center text-white hover:opacity-90 transition-all">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    </button>
+                </div>
+            </div>
+            {/* Recommendations */}
+            <div className="bg-white rounded-2xl p-5 border border-border-light">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">你可能想找</h3>
+                <div className="space-y-1">
+                    {recommendedDatasets.map(d => (
+                        <div key={d.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary-bg cursor-pointer transition-all group">
+                            <span className="text-xs font-bold text-primary">{d.id}</span>
+                            <span className="text-xs text-gray-500 group-hover:text-primary transition-colors">{d.desc}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            {/* Recent History */}
+            <div className="bg-white rounded-2xl p-5 border border-border-light">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">最近常用</h3>
+                <div className="space-y-1">
+                    {recentHistory.map(h => (
+                        <div key={h.id} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-all">
+                            <div className="flex items-center gap-2">
+                                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <div>
+                                    <span className="text-xs font-medium text-gray-700">{h.id}</span>
+                                    <span className="text-xs text-gray-400 ml-2">{h.title}</span>
+                                </div>
+                            </div>
+                            <span className="text-[10px] text-gray-400">{h.time}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        <>
+            {/* Desktop */}
+            <aside className="hidden xl:block w-[340px] flex-shrink-0 sticky top-[88px] h-[calc(100vh-104px)] overflow-y-auto sidebar-scroll">
+                {panelContent}
+            </aside>
+            {/* Medium screens - narrower */}
+            <aside className="hidden lg:block xl:hidden w-[280px] flex-shrink-0 sticky top-[88px] h-[calc(100vh-104px)] overflow-y-auto sidebar-scroll">
+                {panelContent}
+            </aside>
+            {/* Mobile toggle button */}
+            <button onClick={onToggle} className="lg:hidden fixed bottom-6 right-6 w-12 h-12 btn-gradient rounded-full shadow-lg flex items-center justify-center text-white z-50 ai-pulse">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            </button>
+            {/* Mobile panel */}
+            {aiOpen && (
+                <div className="lg:hidden fixed inset-0 z-[60] flex justify-end">
+                    <div className="absolute inset-0 bg-black/30" onClick={onToggle}></div>
+                    <div className="relative w-[340px] max-w-[90vw] bg-page-bg h-full overflow-y-auto p-4 shadow-xl fade-in">
+                        <button onClick={onToggle} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 z-10">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                        <div className="pt-8">{panelContent}</div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+// ============ MAIN APP ============
+function App() {
+    const [searchTerm, setSearchTerm] = React.useState('');
+    const [loading, setLoading] = React.useState(true);
+    const [viewMode, setViewMode] = React.useState('grid');
+    const [sortBy, setSortBy] = React.useState('相关性');
+    const [filters, setFilters] = React.useState({ types: ['GEO'] });
+    const [mobileFilterOpen, setMobileFilterOpen] = React.useState(false);
+    const [aiOpen, setAiOpen] = React.useState(false);
+    const [addedIds, setAddedIds] = React.useState([]);
+
+    React.useEffect(() => { setTimeout(() => setLoading(false), 1500); }, []);
+
+    const handleFilterChange = (key, value) => {
+        setFilters(prev => {
+            const arr = prev[key] || [];
+            return { ...prev, [key]: arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value] };
+        });
+    };
+
+    const filtered = mockDatasets.filter(d =>
+        d.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.disease.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.organism.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleAdd = (id) => {
+        if (!addedIds.includes(id)) setAddedIds([...addedIds, id]);
+    };
+
+    return (
+        <div className="min-h-screen bg-page-bg">
+            <Header />
+            <div className="pt-[72px] flex gap-4 p-4 max-w-[1800px] mx-auto">
+                {/* Left Sidebar */}
+                <SidebarFilters filters={filters} onFilterChange={handleFilterChange} mobileOpen={mobileFilterOpen} onMobileClose={() => setMobileFilterOpen(false)} />
+
+                {/* Main Content */}
+                <main className="flex-1 min-w-0">
+                    {/* Mobile filter button */}
+                    <button onClick={() => setMobileFilterOpen(true)} className="lg:hidden mb-4 h-10 px-4 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 flex items-center gap-2 hover:bg-gray-50 transition-all">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                        筛选
+                    </button>
+
+                    <SearchBar searchTerm={searchTerm} onSearch={setSearchTerm} />
+                    <ActiveFilters filters={filters} onRemove={() => {}} onClear={() => setFilters({types:[]})} />
+
+                    {/* Stats Bar */}
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm text-gray-500">显示 <span className="font-semibold text-gray-900">{filtered.length}</span> / <span className="text-gray-400">15,544</span> 个数据集</span>
+                        <div className="flex items-center gap-3">
+                            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:border-primary">
+                                <option>相关性</option><option>样本量</option><option>最新发布</option>
+                            </select>
+                            <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+                                <button onClick={() => setViewMode('grid')} className={`h-8 px-2.5 transition-all ${viewMode==='grid'?'bg-primary-bg text-primary':'bg-white text-gray-400 hover:bg-gray-50'}`}>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                                </button>
+                                <button onClick={() => setViewMode('list')} className={`h-8 px-2.5 border-l border-gray-200 transition-all ${viewMode==='list'?'bg-primary-bg text-primary':'bg-white text-gray-400 hover:bg-gray-50'}`}>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Dataset Grid */}
+                    {loading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                            {Array.from({length:9}).map((_,i) => <SkeletonCard key={i} />)}
+                        </div>
+                    ) : viewMode === 'grid' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 fade-in">
+                            {filtered.map(d => <DatasetCard key={d.id} dataset={d} onAddToWorkspace={handleAdd} />)}
+                        </div>
+                    ) : (
+                        <div className="space-y-3 fade-in">
+                            {filtered.map(d => (
+                                <div key={d.id} className="bg-white rounded-xl border border-border-light p-4 flex items-center gap-4 card-hover cursor-pointer">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-sm font-bold text-primary">{d.id}</span>
+                                            <span className="text-[10px] px-2 py-0.5 rounded-full border border-blue-200 bg-blue-50 text-blue-600 font-medium">{d.datatype}</span>
+                                        </div>
+                                        <p className="text-sm text-gray-800 font-medium truncate">{d.title}</p>
+                                        <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                                            <span>{d.organism}</span><span>样本: {d.sampleCount}</span><span>{d.platform}</span>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => handleAdd(d.id)} className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${addedIds.includes(d.id) ? 'bg-green-50 text-green-600 border border-green-200' : 'border border-primary text-primary hover:bg-primary-bg'}`}>
+                                        {addedIds.includes(d.id) ? '✓ 已添加' : '+ 添加'}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Pagination hint */}
+                    {!loading && (
+                        <div className="flex justify-center mt-8">
+                            <button className="h-10 px-6 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">加载更多数据集...</button>
+                        </div>
+                    )}
+                </main>
+
+                {/* Right AI Panel */}
+                <AIAssistantPanel aiOpen={aiOpen} onToggle={() => setAiOpen(!aiOpen)} />
+            </div>
+        </div>
+    );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
