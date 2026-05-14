@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BioIntelOS - The AI Research Operating System for Life Science. From research questions to publication-ready outputs.">
+    <meta name="keywords" content="AI, Life Science, Research, Bioinformatics, Multi-omics, Drug Discovery">
+    <title>BioIntelOS — AI Research Operating System for Life Science</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563FF',
+                        purple: '#7C3AED',
+                        cyan: '#06B6D4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border-color: rgba(37, 99, 255, 0.3);
+        }
+        .btn-primary {
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 24px rgba(37, 99, 255, 0.3);
+        }
+        .pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .workflow-line {
+            background: linear-gradient(180deg, #2563FF 0%, #06B6D4 100%);
+        }
+        .glow-blue { box-shadow: 0 0 20px rgba(37, 99, 255, 0.1); }
+        .glow-cyan { box-shadow: 0 0 20px rgba(6, 182, 212, 0.1); }
+        .glow-purple { box-shadow: 0 0 20px rgba(124, 58, 237, 0.1); }
+
+        .loop-node {
+            transition: all 0.3s ease;
+        }
+        .loop-node:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .float-animation {
+            animation: float 4s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900 antialiased">
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100" style="height: 72px;">
+        <div class="max-w-[1280px] mx-auto px-6 h-full flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+                        <line x1="12" y1="22" x2="12" y2="15.5"/>
+                        <polyline points="22 8.5 12 15.5 2 8.5"/>
+                    </svg>
+                </div>
+                <span class="text-xl font-bold text-gray-900">BioIntelOS</span>
+            </div>
+            <!-- Nav Links -->
+            <div class="hidden lg:flex items-center gap-8">
+                <a href="#product" class="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Product</a>
+                <a href="#agents" class="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Agents</a>
+                <a href="#solutions" class="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Solutions</a>
+                <a href="#trust" class="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Trust</a>
+                <a href="#resources" class="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Resources</a>
+                <a href="#company" class="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Company</a>
+            </div>
+            <!-- CTA -->
+            <div class="flex items-center gap-4">
+                <a href="#" class="hidden sm:block text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</a>
+                <a href="#" class="btn-primary inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold rounded-xl h-11 px-6">
+                    Launch Research
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-20 pb-32 min-h-[820px] flex items-center">
+        <div class="max-w-[1280px] mx-auto px-6 flex flex-col lg:flex-row items-center gap-16">
+            <!-- Left Content -->
+            <div class="w-full lg:w-[45%] fade-up">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full mb-8">
+                    <div class="w-2 h-2 bg-primary rounded-full pulse-slow"></div>
+                    <span class="text-xs font-semibold text-primary uppercase tracking-wide">AI Research Operating System</span>
+                </div>
+                <h1 class="text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight mb-6">
+                    BioIntelOS<br>
+                    <span class="text-gray-400 text-3xl lg:text-4xl font-bold">The AI Research Operating System for</span><br>
+                    <span class="text-primary">Life Science</span>
+                </h1>
+                <p class="text-lg text-gray-600 leading-relaxed max-w-[560px] mb-10">
+                    面向生命科学的 AI 科研操作系统。从科研问题到论文成果的自主科研基础设施。
+                </p>
+                <div class="flex flex-wrap items-center gap-4 mb-12">
+                    <a href="#" class="btn-primary inline-flex items-center gap-2 bg-primary text-white font-semibold rounded-xl h-12 px-7 text-sm">
+                        Launch Research
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="#" class="inline-flex items-center gap-2 border border-gray-200 text-gray-700 font-semibold rounded-xl h-12 px-7 text-sm hover:border-gray-300 transition-colors">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        Watch Demo
+                    </a>
+                </div>
+                <div class="flex flex-wrap gap-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <span class="text-xs font-medium text-gray-600">AI-Native Infrastructure</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <span class="text-xs font-medium text-gray-600">Trusted by Researchers</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <span class="text-xs font-medium text-gray-600">Enterprise Ready</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Right: AI Workflow Diagram (Horizontal) -->
+            <div class="w-full lg:w-[55%] fade-up" style="transition-delay: 0.2s;">
+                <div class="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 lg:p-8 float-animation">
+                    <!-- Workflow Header -->
+                    <div class="text-center mb-6">
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest">AI Research Workflow</span>
+                    </div>
+                    <!-- Horizontal Workflow Nodes -->
+                    <div class="flex items-center justify-between gap-1">
+                        <!-- Node 1 -->
+                        <div class="flex flex-col items-center gap-2 flex-1">
+                            <div class="w-11 h-11 rounded-full bg-gray-200 flex items-center justify-center">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            </div>
+                            <p class="text-[10px] font-semibold text-gray-700 text-center leading-tight">Research<br>Question</p>
+                        </div>
+                        <!-- Arrow -->
+                        <div class="h-0.5 w-4 flex-shrink-0 workflow-line rounded-full"></div>
+                        <!-- Node 2 -->
+                        <div class="flex flex-col items-center gap-2 flex-1">
+                            <div class="w-11 h-11 rounded-full bg-primary flex items-center justify-center">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            </div>
+                            <p class="text-[10px] font-semibold text-primary text-center leading-tight">Athena<br><span class="font-normal text-gray-500">Strategy</span></p>
+                        </div>
+                        <!-- Arrow -->
+                        <div class="h-0.5 w-4 flex-shrink-0 workflow-line rounded-full"></div>
+                        <!-- Node 3 -->
+                        <div class="flex flex-col items-center gap-2 flex-1">
+                            <div class="w-11 h-11 rounded-full bg-cyan flex items-center justify-center">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+                            </div>
+                            <p class="text-[10px] font-semibold text-cyan-600 text-center leading-tight">Hermes<br><span class="font-normal text-gray-500">Data</span></p>
+                        </div>
+                        <!-- Arrow -->
+                        <div class="h-0.5 w-4 flex-shrink-0 workflow-line rounded-full"></div>
+                        <!-- Node 4 -->
+                        <div class="flex flex-col items-center gap-2 flex-1">
+                            <div class="w-11 h-11 rounded-full bg-purple flex items-center justify-center">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            </div>
+                            <p class="text-[10px] font-semibold text-purple-600 text-center leading-tight">Apollo<br><span class="font-normal text-gray-500">Analysis</span></p>
+                        </div>
+                        <!-- Arrow -->
+                        <div class="h-0.5 w-4 flex-shrink-0 workflow-line rounded-full"></div>
+                        <!-- Node 5 -->
+                        <div class="flex flex-col items-center gap-2 flex-1">
+                            <div class="w-11 h-11 rounded-full bg-green-500 flex items-center justify-center">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                            <p class="text-[10px] font-semibold text-green-700 text-center leading-tight">Output<br><span class="font-normal text-gray-500">Publication</span></p>
+                        </div>
+                    </div>
+                    <!-- QC Gates -->
+                    <div class="mt-8 pt-5 border-t border-gray-100">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest text-center mb-3">QC Gates & Evidence Chain</p>
+                        <div class="flex justify-center gap-3 flex-wrap">
+                            <span class="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs font-medium text-gray-600">Data QC</span>
+                            <span class="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs font-medium text-gray-600">Method QC</span>
+                            <span class="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs font-medium text-gray-600">Result QC</span>
+                            <span class="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs font-medium text-gray-600">Evidence Check</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Research Limitation Section -->
+    <section class="py-[120px] bg-white">
+        <div class="max-w-[1280px] mx-auto px-6">
+            <div class="text-center mb-20 fade-up">
+                <h2 class="text-3xl lg:text-5xl font-extrabold leading-tight">
+                    Research is no longer limited by data.<br>
+                    <span class="text-primary">It is limited by sustainable analytical capability.</span>
+                </h2>
+                <p class="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">科研的瓶颈不再是数据，而是可持续的分析能力</p>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Traditional Research -->
+                <div class="fade-up">
+                    <div class="bg-gray-50 rounded-2xl border border-gray-200 p-8 h-full flex flex-col">
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Traditional Research</h3>
+                        <p class="text-sm text-gray-500 mb-6">碎片化 · 低效率 · 不可持续</p>
+                        <!-- Pain point steps -->
+                        <div class="space-y-4 flex-1">
+                            <div class="flex items-start gap-3 p-3 bg-white rounded-xl border border-gray-100">
+                                <div class="w-9 h-9 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">提出问题</p>
+                                    <p class="text-xs text-gray-500">缺乏系统方法论，方向模糊</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-white rounded-xl border border-gray-100">
+                                <div class="w-9 h-9 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">文献调研</p>
+                                    <p class="text-xs text-gray-500">海量文献人工筛选，耗时数周</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-white rounded-xl border border-gray-100">
+                                <div class="w-9 h-9 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">数据获取</p>
+                                    <p class="text-xs text-gray-500">格式混乱、标准不一、清洗困难</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-white rounded-xl border border-gray-100">
+                                <div class="w-9 h-9 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">分析执行</p>
+                                    <p class="text-xs text-gray-500">工具分散、代码不可复现、反复试错</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-white rounded-xl border border-gray-100">
+                                <div class="w-9 h-9 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">成果产出</p>
+                                    <p class="text-xs text-gray-500">手动作图、格式调整、经验难沉淀</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-red-500 font-medium mt-6 pt-4 border-t border-gray-200">周期长 · 成本高 · 不可复现 · 难沉淀</p>
+                    </div>
+                </div>
+                <!-- BioIntelOS Loop -->
+                <div class="fade-up" style="transition-delay: 0.2s;">
+                    <div class="bg-white rounded-2xl border border-blue-100 p-8 glow-blue h-full flex flex-col">
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">BioIntelOS: Unified AI Research Loop</h3>
+                        <p class="text-sm text-primary mb-6">统一 · 智能 · 自主进化</p>
+                        <!-- Circular Loop Diagram -->
+                        <div class="relative w-full aspect-square max-w-[300px] mx-auto flex-1 flex items-center justify-center">
+                            <div class="relative w-full aspect-square">
+                                <!-- Center Logo -->
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+                                    </svg>
+                                </div>
+                                <!-- Circle path -->
+                                <div class="absolute inset-6 rounded-full border-2 border-dashed border-blue-100"></div>
+                                <!-- Nodes positioned around circle -->
+                                <div class="loop-node absolute top-0 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+                                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                    </div>
+                                    <span class="text-[9px] font-medium text-gray-600 whitespace-nowrap">Research Question</span>
+                                </div>
+                                <div class="loop-node absolute top-[15%] right-0 flex flex-col items-center gap-1">
+                                    <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                    </div>
+                                    <span class="text-[9px] font-medium text-gray-600 whitespace-nowrap">Knowledge Reasoning</span>
+                                </div>
+                                <div class="loop-node absolute top-[60%] right-0 flex flex-col items-center gap-1">
+                                    <div class="w-10 h-10 rounded-full bg-cyan flex items-center justify-center">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                                    </div>
+                                    <span class="text-[9px] font-medium text-gray-600 whitespace-nowrap">Data Orchestration</span>
+                                </div>
+                                <div class="loop-node absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+                                    <div class="w-10 h-10 rounded-full bg-purple flex items-center justify-center">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    </div>
+                                    <span class="text-[9px] font-medium text-gray-600 whitespace-nowrap">Analysis Execution</span>
+                                </div>
+                                <div class="loop-node absolute top-[60%] left-0 flex flex-col items-center gap-1">
+                                    <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                                    </div>
+                                    <span class="text-[9px] font-medium text-gray-600 whitespace-nowrap">Output & Report</span>
+                                </div>
+                                <div class="loop-node absolute top-[15%] left-0 flex flex-col items-center gap-1">
+                                    <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"/></svg>
+                                    </div>
+                                    <span class="text-[9px] font-medium text-gray-600 whitespace-nowrap">Research Memory</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-primary font-medium mt-6 text-center pt-4 border-t border-blue-50">高效 · 可循 · 可复用 · 可沉淀 · 持续进化</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Three AI Agents Section -->
+    <section id="agents" class="py-[120px] bg-gray-50/50">
+        <div class="max-w-[1280px] mx-auto px-6">
+            <div class="text-center mb-16 fade-up">
+                <h2 class="text-3xl lg:text-5xl font-extrabold leading-tight mb-4">
+                    Three AI Research Agents.<br>One AI Research Team.
+                </h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    三大 AI 科研智能体，协同完成从问题到成果的全链路科研
+                </p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Athena -->
+                <div class="card-hover bg-white rounded-2xl border border-gray-200 p-8 relative overflow-hidden fade-up">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-blue-400"></div>
+                    <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-6 glow-blue">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-1">Athena</h3>
+                    <p class="text-sm font-medium text-primary mb-6">The Research Strategist</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">文献理解与整合</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">科研假设生成</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">研究路线规划</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">机制推理</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">实验方向建议</span>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Hermes -->
+                <div class="card-hover bg-white rounded-2xl border border-gray-200 p-8 relative overflow-hidden fade-up" style="transition-delay: 0.1s;">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan to-teal-400"></div>
+                    <div class="w-14 h-14 rounded-2xl bg-cyan-50 flex items-center justify-center mb-6 glow-cyan">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-1">Hermes</h3>
+                    <p class="text-sm font-medium text-cyan-600 mb-6">The Data Infrastructure Agent</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">数据标准化</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">数据治理</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">Quality Control</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">数据编排</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">数据资产沉淀</span>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Apollo -->
+                <div class="card-hover bg-white rounded-2xl border border-gray-200 p-8 relative overflow-hidden fade-up" style="transition-delay: 0.2s;">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple to-violet-400"></div>
+                    <div class="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center mb-6 glow-purple">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-1">Apollo</h3>
+                    <p class="text-sm font-medium text-purple-600 mb-6">The Analysis Execution Agent</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">自动化分析</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">多组学 Pipeline</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">可复现分析</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">结果生成</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span class="text-sm text-gray-600">自动报告</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Metrics Section -->
+    <section id="trust" class="py-[120px] bg-white">
+        <div class="max-w-[1280px] mx-auto px-6">
+            <div class="text-center mb-16 fade-up">
+                <h2 class="text-3xl lg:text-5xl font-extrabold leading-tight">全流程科研智能支持</h2>
+                <p class="text-lg text-gray-600 mt-4">覆盖生命科学主流组学方向，提供端到端分析能力</p>
+            </div>
+            <!-- Big Numbers -->
+            <div class="grid grid-cols-3 gap-8 mb-20 fade-up">
+                <div class="text-center p-8 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p class="text-5xl lg:text-7xl font-extrabold text-primary">505+</p>
+                    <p class="text-base text-gray-700 mt-3 font-semibold">生物数据集</p>
+                    <p class="text-sm text-gray-500 mt-1">涵盖公共数据库与企业私有数据</p>
+                </div>
+                <div class="text-center p-8 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p class="text-5xl lg:text-7xl font-extrabold text-primary">66</p>
+                    <p class="text-base text-gray-700 mt-3 font-semibold">分析流程</p>
+                    <p class="text-sm text-gray-500 mt-1">标准化、可复现的自动化 Pipeline</p>
+                </div>
+                <div class="text-center p-8 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p class="text-5xl lg:text-7xl font-extrabold text-primary">20+</p>
+                    <p class="text-base text-gray-700 mt-3 font-semibold">组学领域</p>
+                    <p class="text-sm text-gray-500 mt-1">多组学交叉分析全面覆盖</p>
+                </div>
+            </div>
+            <!-- Omics Coverage Matrix -->
+            <div class="fade-up">
+                <div class="text-center mb-10">
+                    <h3 class="text-2xl font-bold text-gray-900">组学覆盖矩阵</h3>
+                    <p class="text-sm text-gray-500 mt-2">Omics Coverage Matrix</p>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                    <div class="card-hover flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-200">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="1.5"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="4"/></svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-800">基因组学</span>
+                        <span class="text-[10px] text-gray-400">Genomics</span>
+                    </div>
+                    <div class="card-hover flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-200">
+                        <div class="w-12 h-12 rounded-xl bg-cyan-50 flex items-center justify-center">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-800">转录组学</span>
+                        <span class="text-[10px] text-gray-400">Transcriptomics</span>
+                    </div>
+                    <div class="card-hover flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-200">
+                        <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-800">单细胞组学</span>
+                        <span class="text-[10px] text-gray-400">Single-cell</span>
+                    </div>
+                    <div class="card-hover flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-200">
+                        <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-800">空间组学</span>
+                        <span class="text-[10px] text-gray-400">Spatial Omics</span>
+                    </div>
+                    <div class="card-hover flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-200">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-800">蛋白质组学</span>
+                        <span class="text-[10px] text-gray-400">Proteomics</span>
+                    </div>
+                    <div class="card-hover flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-200">
+                        <div class="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="1.5"><path d="M7 2v11m0 0a5 5 0 0 0 10 0V2"/></svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-800">代谢组学</span>
+                        <span class="text-[10px] text-gray-400">Metabolomics</span>
+                    </div>
+                    <div class="card-hover flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-200">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-800">免疫组学</span>
+                        <span class="text-[10px] text-gray-400">Immunomics</span>
+                    </div>
+                    <div class="card-hover flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-200">
+                        <div class="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0D9488" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-800">宏基因组学</span>
+                        <span class="text-[10px] text-gray-400">Metagenomics</span>
+                    </div>
+                    <div class="card-hover flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-200">
+                        <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="1.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-800">表观组学</span>
+                        <span class="text-[10px] text-gray-400">Epigenomics</span>
+                    </div>
+                    <div class="card-hover flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-200">
+                        <div class="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="1.5"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-800">结构生物学</span>
+                        <span class="text-[10px] text-gray-400">Structural Biology</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Workspace Section -->
+    <section id="product" class="py-[120px] bg-gray-50/50">
+        <div class="max-w-[1280px] mx-auto px-6">
+            <div class="text-center mb-16 fade-up">
+                <h2 class="text-3xl lg:text-5xl font-extrabold leading-tight">选择具体探索方向，开启精准研究</h2>
+            </div>
+            <div class="flex flex-col lg:flex-row gap-6 fade-up lg:items-stretch">
+                <!-- Left Sidebar -->
+                <div class="w-full lg:w-[280px] flex-shrink-0 flex">
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm w-full flex flex-col">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Research Directions</p>
+                        <div class="space-y-2 flex-1">
+                            <div class="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl cursor-pointer">
+                                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                <span class="text-sm font-medium text-primary">新课题与肿瘤研究方向</span>
+                            </div>
+                            <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors">
+                                <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                <span class="text-sm font-medium text-gray-600">中药机制研究方向</span>
+                            </div>
+                            <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors">
+                                <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                <span class="text-sm font-medium text-gray-600">免疫治疗机制研究方向</span>
+                            </div>
+                            <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors">
+                                <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                <span class="text-sm font-medium text-gray-600">自定义研究方向</span>
+                            </div>
+                        </div>
+                        <!-- Bottom info -->
+                        <div class="mt-auto pt-6 border-t border-gray-100">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-6 h-6 rounded bg-blue-50 flex items-center justify-center">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                </div>
+                                <span class="text-xs font-medium text-gray-600">AI 智能推荐</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400 leading-relaxed">基于你的研究历史和领域热点，智能推荐最优研究方向</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Workspace -->
+                <div class="flex-1">
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <!-- Workspace Header -->
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
+                            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                            <span class="ml-4 text-sm font-medium text-gray-500">BioIntelOS Workspace</span>
+                        </div>
+                        <div class="flex min-h-[480px]">
+                            <!-- File Tree -->
+                            <div class="w-[200px] border-r border-gray-100 p-4 hidden md:block">
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Explorer</p>
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center gap-2 text-xs text-gray-600">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                                        <span>research_project/</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 pl-4">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                                        <span>hypothesis.md</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 pl-4">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                                        <span>analysis.py</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 pl-4">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                                        <span>results.csv</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 pl-4">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                                        <span>figures/</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 pl-4">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                                        <span>report.pdf</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Main Chat Area -->
+                            <div class="flex-1 flex flex-col">
+                                <!-- Chat Content -->
+                                <div class="flex-1 p-6 space-y-4">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-900 font-medium mb-3">Hi, echo. 我已为你准备好肿瘤免疫微环境的研究方案。</p>
+                                            <!-- Cards -->
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <div class="bg-gradient-to-br from-blue-50 to-white rounded-xl border border-blue-100 p-3">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <div class="w-6 h-6 rounded bg-primary/10 flex items-center justify-center">
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                                                        </div>
+                                                        <span class="text-[10px] font-semibold text-gray-700">Heatmap</span>
+                                                    </div>
+                                                    <div class="grid grid-cols-4 gap-0.5">
+                                                        <div class="h-2 bg-blue-200 rounded-sm"></div>
+                                                        <div class="h-2 bg-blue-400 rounded-sm"></div>
+                                                        <div class="h-2 bg-blue-300 rounded-sm"></div>
+                                                        <div class="h-2 bg-blue-100 rounded-sm"></div>
+                                                        <div class="h-2 bg-blue-500 rounded-sm"></div>
+                                                        <div class="h-2 bg-blue-200 rounded-sm"></div>
+                                                        <div class="h-2 bg-blue-600 rounded-sm"></div>
+                                                        <div class="h-2 bg-blue-300 rounded-sm"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="bg-gradient-to-br from-purple-50 to-white rounded-xl border border-purple-100 p-3">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <div class="w-6 h-6 rounded bg-purple/10 flex items-center justify-center">
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                                        </div>
+                                                        <span class="text-[10px] font-semibold text-gray-700">Pathway</span>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <div class="h-1.5 bg-purple-200 rounded-full w-full"></div>
+                                                        <div class="h-1.5 bg-purple-300 rounded-full w-3/4"></div>
+                                                        <div class="h-1.5 bg-purple-100 rounded-full w-1/2"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="bg-gradient-to-br from-cyan-50 to-white rounded-xl border border-cyan-100 p-3">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <div class="w-6 h-6 rounded bg-cyan/10 flex items-center justify-center">
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+                                                        </div>
+                                                        <span class="text-[10px] font-semibold text-gray-700">DEG Analysis</span>
+                                                    </div>
+                                                    <div class="flex items-end gap-1 h-6">
+                                                        <div class="w-2 bg-cyan-200 rounded-t" style="height:40%"></div>
+                                                        <div class="w-2 bg-cyan-300 rounded-t" style="height:70%"></div>
+                                                        <div class="w-2 bg-cyan-400 rounded-t" style="height:100%"></div>
+                                                        <div class="w-2 bg-cyan-300 rounded-t" style="height:55%"></div>
+                                                        <div class="w-2 bg-cyan-200 rounded-t" style="height:30%"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="bg-gradient-to-br from-green-50 to-white rounded-xl border border-green-100 p-3">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <div class="w-6 h-6 rounded bg-green-500/10 flex items-center justify-center">
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                                        </div>
+                                                        <span class="text-[10px] font-semibold text-gray-700">AI Suggestions</span>
+                                                    </div>
+                                                    <p class="text-[9px] text-gray-500 leading-relaxed">建议关注 PD-L1 与 TMB 的相关性...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Input Bar -->
+                                <div class="p-4 border-t border-gray-100">
+                                    <div class="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                        <span class="text-sm text-gray-400 flex-1">Ask BioIntelOS anything about your research...</span>
+                                        <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-16 bg-white border-t border-gray-100">
+        <div class="max-w-[1280px] mx-auto px-6">
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
+                <!-- Brand -->
+                <div class="col-span-2">
+                    <div class="flex items-center gap-2.5 mb-4">
+                        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold text-gray-900">BioIntelOS</span>
+                    </div>
+                    <p class="text-sm text-gray-500 leading-relaxed max-w-[240px]">
+                        The AI Research Operating System for Life Science. Empowering researchers worldwide.
+                    </p>
+                </div>
+                <!-- Product -->
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-900 mb-4">产品</h4>
+                    <ul class="space-y-2.5">
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Research OS</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">AI Agents</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Workspace</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Pricing</a></li>
+                    </ul>
+                </div>
+                <!-- Capabilities -->
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-900 mb-4">能力</h4>
+                    <ul class="space-y-2.5">
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Multi-omics</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">AI Analysis</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Data Pipeline</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Integrations</a></li>
+                    </ul>
+                </div>
+                <!-- Solutions -->
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-900 mb-4">解决方案</h4>
+                    <ul class="space-y-2.5">
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Pharma</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Biotech</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Academia</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">CRO</a></li>
+                    </ul>
+                </div>
+                <!-- Company -->
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-900 mb-4">关于我们</h4>
+                    <ul class="space-y-2.5">
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">About</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Careers</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Blog</a></li>
+                        <li><a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Bottom -->
+            <div class="pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-gray-400">© 2026 BioIntelOS. All rights reserved.</p>
+                <div class="flex items-center gap-6">
+                    <a href="#" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">Privacy</a>
+                    <a href="#" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">Terms</a>
+                    <a href="#" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">Security</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll Reveal Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Scroll reveal
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+            document.querySelectorAll('.fade-up').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Smooth scroll for nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
